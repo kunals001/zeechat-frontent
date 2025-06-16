@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Josefin_Sans, Poppins } from "next/font/google";
 import "./globals.css";
+import ReduxProvider from "../redux/provider";
 
 const Josefin = Josefin_Sans({
   variable: "--font-josefin-sans",
@@ -30,7 +31,9 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${poppins.variable} ${Josefin.variable}`} cz-shortcut-listen="true">
-        {children}
+        <ReduxProvider>
+          {children}
+        </ReduxProvider>
       </body>
     </html>
   );
