@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react'
+import React, { useState ,useEffect} from 'react'
 import AuthLayout from '@/components/Layouts/AuthLayout'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { signup, verifyEmail } from '@/redux/slice/authSlice'
@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import SignupForm from '@/components/Auth/SignupForm'
 import VerifyEmail from '@/components/Auth/VerifyEmail'
+import {Redirect} from '@/components/Secure/Redirect'
 
 const Page = () => {
   const [fullName, setFullName] = useState("");
@@ -21,9 +22,11 @@ const Page = () => {
   const router = useRouter();
   const { isLoading,error } = useAppSelector(state => state.auth);
 
-  if (error) {
-    toast.error(error);
-  }
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
 
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -50,6 +53,7 @@ const Page = () => {
   }
 
   return (
+    <Redirect>
     <AuthLayout>
       {submitted ? (
         <div className="w-full px-[1vh] md:px-0 flex items-center justify-center">
@@ -72,6 +76,7 @@ const Page = () => {
         </div>
       )}
     </AuthLayout>
+    </Redirect>
   )
 }
 

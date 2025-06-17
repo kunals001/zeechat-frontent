@@ -1,4 +1,6 @@
-const Input = ({ ...props }) => {
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+
+const Input = ({ ...props }: InputProps) => {
 	return (
 		<div className='relative mb-1'>
 			<input

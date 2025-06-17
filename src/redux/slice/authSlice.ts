@@ -30,10 +30,10 @@ const initialState: AuthState = {
 export const signup = createAsyncThunk<User, {fullName: string; userName: string; email: string; password: string;}, { rejectValue: ErrorPayload }>('auth/signup', async (data, { rejectWithValue }) => {
   try {
     const response = await axios.post(`${API_URL}/api/auth/signup`, data);
-    return response.data.user;
+    return response.data.data;
   } catch (error) {
     if (error instanceof AxiosError) {
-      return rejectWithValue(error.response?.data.error);
+      return rejectWithValue(error.response?.data.message || "Signup failed");
     }
   }
 });
@@ -102,18 +102,21 @@ export const resetPassword = createAsyncThunk<void,{token: string; password: str
   }
 });
 
-export const checkAuth = createAsyncThunk<User, void, { rejectValue: ErrorPayload }>('auth/check-auth', async (_, { rejectWithValue }) => {
-  try {
-    const response = await axios.get(`${API_URL}/api/auth/check-auth`);
-    return response.data.user;
-  } catch (error) {
-    if (error instanceof AxiosError) {
-      return rejectWithValue(error.response?.data.error);
+
+/// check auth
+
+export const checkAuth = createAsyncThunk<User, void, { rejectValue: ErrorPayload }>(
+  'auth/checkAuth',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`${API_URL}/api/auth/check-auth`);
+      return response.data.data as User;
+    } catch (err) {
+      const error = err as AxiosError<{ message: string }>;
+      return rejectWithValue(error.response?.data?.message || 'Auth check failed');
     }
   }
-})
-
-
+);
 
 
 const authSlice = createSlice({

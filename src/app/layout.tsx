@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Josefin_Sans, Poppins } from "next/font/google";
 import "./globals.css";
 import ReduxProvider from "../redux/provider";
+import { Toaster } from "react-hot-toast";
+import { CheckUser } from "@/components/Secure/CheckUser";
 
 const Josefin = Josefin_Sans({
   variable: "--font-josefin-sans",
@@ -11,7 +13,7 @@ const Josefin = Josefin_Sans({
 const poppins = Poppins({
   variable: "--font-poppins",
   subsets: ["latin"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
@@ -32,7 +34,10 @@ export default function RootLayout({
       <body
         className={`${poppins.variable} ${Josefin.variable}`} cz-shortcut-listen="true">
         <ReduxProvider>
-          {children}
+          <CheckUser>
+            {children}
+            <Toaster position="top-right" />
+          </CheckUser>
         </ReduxProvider>
       </body>
     </html>
