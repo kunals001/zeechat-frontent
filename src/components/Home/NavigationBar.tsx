@@ -56,7 +56,7 @@ const NavigationBar = () => {
 
   return (
     
-    <div className={`md:w-[4vw] md:h-[calc(100vh-7vw)] bg-[#0d0d0ddf] md:rounded-l-lg md:flex flex-col items-center justify-between md:py-[1vh] relative hidden `}>
+    <div className={`md:w-[4vw] md:h-[calc(100vh-7vw)] bg-[#111111df] md:rounded-l-lg md:flex flex-col items-center justify-between md:py-[1vh] relative hidden `}>
       <div className="flex md:flex-col md:gap-[.2vh] flex-row gap-[5vh]">
         {items.map((item) => {
           const isSelected = currentTab === item.tab;
