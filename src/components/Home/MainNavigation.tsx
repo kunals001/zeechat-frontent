@@ -4,6 +4,7 @@ import {useSearchParams } from 'next/navigation';
 import NavigationBar from './NavigationBar';
 import Chats from './Chats';
 import Status from './Status';
+import Profile from './Profile';
 
 const MainNavigation = () => {
 
@@ -27,6 +28,7 @@ const MainNavigation = () => {
           {tab === 'chats' && <Chats/>}
           {tab === 'status' && <Status/>}
           {tab === 'groups' && <div>Groups</div>}
+          {tab === 'profile' && <Profile/>}
         </div>
       </div>
   )

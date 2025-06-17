@@ -49,7 +49,7 @@ const Page = () => {
 
           <form onSubmit={handleLogin} className="flex flex-col gap-4 w-full">
             <Input
-              type='email'
+              type='text'
               placeholder='Email'
               value={identifier}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIdentifier(e.target.value)}

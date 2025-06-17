@@ -25,7 +25,7 @@ const initialState: UserState = {
 export const updateProfile = createAsyncThunk<User, {fullName: string; userName: string; bio: string; profilePic: string;}, { rejectValue: ErrorPayload }>('user/update-profile', async (data, { rejectWithValue }) => {
   try {
     const response = await axios.post(`${API_URL}/api/users/update-profile`, data);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     if (error instanceof AxiosError) {
       return rejectWithValue(error.response?.data.error);

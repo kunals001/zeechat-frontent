@@ -70,7 +70,7 @@ export const login = createAsyncThunk<User,{ identifier: string; password: strin
 
 export const logout = createAsyncThunk<void, void, { rejectValue: ErrorPayload }>('auth/logout', async (_, { rejectWithValue }) => {
   try {
-    await axios.get(`${API_URL}/api/auth/logout`);
+    await axios.post(`${API_URL}/api/auth/logout`);
   } catch (error) {
     if (error instanceof AxiosError) {
       return rejectWithValue(error.response?.data.error);
