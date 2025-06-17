@@ -1,16 +1,15 @@
 "use client"
 import React, { useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { logout } from '@/redux/slice/authSlice'
-import { updateProfile } from '@/redux/slice/userSlice'
+import { logout,updateProfile } from '@/redux/slice/authSlice'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
-import { LogOut } from 'lucide-react'
+import { Loader2, LogOut } from 'lucide-react'
 
 const Profile = () => {
   const dispatch = useAppDispatch()
-  const  user = useAppSelector((state) => state.auth.user)
-  const error = useAppSelector((state) => state.user.error)
+  const { user, error ,isLoading} = useAppSelector((state) => state.auth)
+  
 
   const [profilePic, setProfilePic] = useState('')
   const [fullName, setFullName] = useState('')
@@ -38,18 +37,21 @@ const Profile = () => {
     if (!isEditing) return
 
     try {
+
+      const data = {
+        fullName,
+        userName,
+        bio,
+        profilePic,
+      }
+
       await dispatch(
-        updateProfile({
-          fullName,
-          userName,
-          bio,
-          profilePic,
-        })
+        updateProfile(data)
       ).unwrap()
       toast.success('Profile updated')
       setIsEditing(false)
     } catch (err) {
-      console.error(err)
+      console.log(err)
     }
   }
 
@@ -128,10 +130,10 @@ const Profile = () => {
 
           <button
             type="submit"
-            disabled={!isEditing}
+            disabled={!isEditing || isLoading}
             className="md:text-[1vw] text-[2vh] rounded-md p-1.5 text-zinc-100 md:px-[1vh] md:py-[.4vh] md:rounded-lg bg-gradient-to-l from-prime to-second cursor-pointer focus:ring-2 ring-prime font-semibold disabled:opacity-50"
           >
-            Save Profile
+            {isLoading ? <div className="flex items-center justify-center gap-1"><Loader2 className="animate-spin text-white" />Saving...</div> : "Save Profile"}
           </button>
         </div>
       </form>

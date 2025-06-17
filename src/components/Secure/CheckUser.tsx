@@ -1,5 +1,4 @@
 "use client";
-
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { checkAuth } from '@/redux/slice/authSlice';
 import { useEffect } from 'react';

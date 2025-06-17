@@ -119,6 +119,99 @@ export const checkAuth = createAsyncThunk<User, void, { rejectValue: ErrorPayloa
 );
 
 
+// update profile 
+
+export const updateProfile = createAsyncThunk<User, {fullName: string; userName: string; bio: string; profilePic: string;}, { rejectValue: ErrorPayload }>('user/update-profile', async (data, { rejectWithValue }) => {
+  try {
+    const response = await axios.put(`${API_URL}/api/users/update-profile`, data);
+    return response.data.data;
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      return rejectWithValue(error.response?.data.message);
+    }
+  }
+})
+
+// follow request
+
+export const sendFollowRequest = createAsyncThunk<User, {userId: string}, { rejectValue: ErrorPayload }>('user/send-follow-request', async (data, { rejectWithValue }) => {
+  try {
+    const response = await axios.post(`${API_URL}/api/users/send-follow-request`, data);
+    return response.data;
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      return rejectWithValue(error.response?.data.error);
+    }
+  }
+});
+
+// accept follow request
+
+export const acceptFollowRequest = createAsyncThunk<User, {userId: string}, { rejectValue: ErrorPayload }>('user/accept-follow-request', async (data, { rejectWithValue }) => {
+  try {
+    const response = await axios.post(`${API_URL}/api/users/accept-follow-request`, data);
+    return response.data;
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      return rejectWithValue(error.response?.data.error);
+    }
+  }
+})
+
+// unfollow
+
+export const unfollow = createAsyncThunk<User, {userId: string}, { rejectValue: ErrorPayload }>('user/unfollow', async (data, { rejectWithValue }) => {
+  try {
+    const response = await axios.post(`${API_URL}/api/users/unfollow`, data);
+    return response.data;
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      return rejectWithValue(error.response?.data.error);
+    }
+  }
+})
+
+// get follow requests
+
+export const getFollowRequests = createAsyncThunk<User, void, { rejectValue: ErrorPayload }>('user/get-follow-requests', async (_, { rejectWithValue }) => {
+  try {
+    const response = await axios.get(`${API_URL}/api/users/get-follow-requests`);
+    return response.data.followRequests;
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      return rejectWithValue(error.response?.data.error);
+    }
+  }
+})
+
+// get following users
+
+export const getFollowingUsers = createAsyncThunk<User, void, { rejectValue: ErrorPayload }>('user/get-following-users', async (_, { rejectWithValue }) => {
+  try {
+    const response = await axios.get(`${API_URL}/api/users/get-following-users`);
+    return response.data.following;
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      return rejectWithValue(error.response?.data.error);
+    }
+  }
+})
+
+// get users
+
+export const getUsers = createAsyncThunk<User, void, { rejectValue: ErrorPayload }>('user/get-users', async (_, { rejectWithValue }) => {
+  try {
+    const response = await axios.get(`${API_URL}/api/users/get-users`);
+    return response.data.users;
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      return rejectWithValue(error.response?.data.error);
+    }
+  }
+})
+
+
+
 const authSlice = createSlice({
     name: 'auth',
     initialState,
@@ -190,6 +283,60 @@ const authSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(checkAuth.rejected, error)
+      .addCase(sendFollowRequest.pending, loading)
+        .addCase(sendFollowRequest.fulfilled, (state, action) => {
+            state.user = action.payload;
+            state.isLoading = false;
+            state.error = null;
+        })
+        .addCase(sendFollowRequest.rejected, error)
+
+        .addCase(acceptFollowRequest.pending, loading)
+        .addCase(acceptFollowRequest.fulfilled, (state, action) => {
+            state.user = action.payload;
+            state.isLoading = false;
+            state.error = null;
+        })
+        .addCase(acceptFollowRequest.rejected, error)
+
+        .addCase(unfollow.pending, loading)
+        .addCase(unfollow.fulfilled, (state, action) => {
+            state.user = action.payload;
+            state.isLoading = false;
+            state.error = null;
+        })
+        .addCase(unfollow.rejected, error)
+
+        .addCase(getFollowRequests.pending, loading)
+        .addCase(getFollowRequests.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.error = null;
+        })
+        .addCase(getFollowRequests.rejected, error)
+
+        .addCase(getFollowingUsers.pending, loading)
+        .addCase(getFollowingUsers.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.error = null;
+        })
+        .addCase(getFollowingUsers.rejected, error)
+
+        .addCase(getUsers.pending, loading)
+        .addCase(getUsers.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.error = null;
+        })
+        .addCase(getUsers.rejected, error)
+
+        .addCase(updateProfile.pending, loading)
+        .addCase(updateProfile.fulfilled, (state, action) => {
+            state.user = action.payload;
+            state.isLoading = false;
+            state.error = null;
+        })
+        .addCase(updateProfile.rejected, error)
+
+
       
   },
 }) 
