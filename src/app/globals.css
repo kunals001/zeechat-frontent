@@ -3,10 +3,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@theme{
-  --font-primery: var(--font-josefin-sans);
-  --font-secondary: var(--font-poppins);
-}
 
 @theme inline {
   --color-background: var(--background);
@@ -44,11 +40,30 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  --font-prime: var(--font-josefin-sans);
+  --font-second: var(--font-poppins);
+  --color-prime:#C68EFD;
+  --color-second:#8F87F1;
+  --animate-gradient: gradient 8s linear infinite;
+  @keyframes gradient {
+  to {
+    background-position: var(--bg-size, 300%) 0;
+    }
+  }
 }
 
 body {
   font-family: var(--font-secondary);
 }
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+.hide-scrollbar {
+    -ms-overflow-style: none; 
+    scrollbar-width: none;    
+  }
 
 :root {
   --radius: 0.625rem;
