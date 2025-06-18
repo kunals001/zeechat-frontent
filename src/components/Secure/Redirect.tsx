@@ -1,5 +1,4 @@
 "use client";
-
 import { useAppSelector } from "@/redux/hooks";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -11,7 +10,7 @@ export const Redirect = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (!isCheckingAuth && isAuthenticated) {
-      router.push("/");
+      router.push("/?tab=chats");
     }
   }, [isAuthenticated, isCheckingAuth, router]);
 
@@ -23,11 +22,5 @@ export const Redirect = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-
-  if (!isCheckingAuth && isAuthenticated) {
-    return null;
-  }
-
-
-  return <>{children}</>;
+  return <>{!isAuthenticated && children}</>;
 };

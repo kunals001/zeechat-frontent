@@ -2,19 +2,25 @@
 import { useAppSelector } from "@/redux/hooks";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Loading from "../Layouts/Loading";
 
 export const AuthCheck = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
-  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, isCheckingAuth } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
-
-    if (!user || !isAuthenticated) {
+    if (!isCheckingAuth && !isAuthenticated) {
       router.push("/login");
-    }else{
-      router.push("/?tab=chats");
     }
-  }, [user, isAuthenticated, router]);
+  }, [isAuthenticated, isCheckingAuth, router]);
 
-  return <>{children}</>;
+  if (isCheckingAuth) {
+    return (
+      <div className="w-full h-screen flex justify-center items-center">
+        <Loading />
+      </div>
+    );
+  }
+
+  return <>{isAuthenticated && children}</>;
 };

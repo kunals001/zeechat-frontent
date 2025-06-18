@@ -10,6 +10,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface AuthState {
   user: User | null;
+  users: User[];
+  followUsers: User[];
+  followRequests: User[];
   isLoading: boolean;
   isAuthenticated: boolean;
   error: string | null;
@@ -18,12 +21,14 @@ interface AuthState {
 
 const initialState: AuthState = {
   user: null,
+  users: [],
+  followUsers: [],
+  followRequests: [],
   isLoading: false,
   isAuthenticated: false,
   error: null,
   isCheckingAuth: false,
 };
-
 
 /// Signup
 
@@ -173,16 +178,19 @@ export const unfollow = createAsyncThunk<User, {userId: string}, { rejectValue: 
 
 // get follow requests
 
-export const getFollowRequests = createAsyncThunk<User, void, { rejectValue: ErrorPayload }>('user/get-follow-requests', async (_, { rejectWithValue }) => {
-  try {
-    const response = await axios.get(`${API_URL}/api/users/get-follow-requests`);
-    return response.data.followRequests;
-  } catch (error) {
-    if (error instanceof AxiosError) {
-      return rejectWithValue(error.response?.data.error);
+export const getFollowRequests = createAsyncThunk<User[], void, { rejectValue: ErrorPayload }>(
+  'user/get-follow-requests',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`${API_URL}/api/users/get-follow-requests`);
+      return response.data.followRequests; // ✅ This is an array
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        return rejectWithValue(error.response?.data.error);
+      }
     }
   }
-})
+);
 
 // get following users
 
@@ -199,16 +207,19 @@ export const getFollowingUsers = createAsyncThunk<User, void, { rejectValue: Err
 
 // get users
 
-export const getUsers = createAsyncThunk<User, void, { rejectValue: ErrorPayload }>('user/get-users', async (_, { rejectWithValue }) => {
-  try {
-    const response = await axios.get(`${API_URL}/api/users/get-users`);
-    return response.data.users;
-  } catch (error) {
-    if (error instanceof AxiosError) {
-      return rejectWithValue(error.response?.data.error);
+export const getUsers = createAsyncThunk<User[], {query: string}, { rejectValue: ErrorPayload }>(
+  'user/get-users',
+  async ({ query }, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`${API_URL}/api/users/get-users?search=${query}`);
+      return response.data.users;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        return rejectWithValue(error.response?.data.error);
+      }
     }
   }
-})
+);
 
 
 
@@ -309,6 +320,7 @@ const authSlice = createSlice({
 
         .addCase(getFollowRequests.pending, loading)
         .addCase(getFollowRequests.fulfilled, (state, action) => {
+            state.followRequests = action.payload;
             state.isLoading = false;
             state.error = null;
         })
@@ -323,6 +335,7 @@ const authSlice = createSlice({
 
         .addCase(getUsers.pending, loading)
         .addCase(getUsers.fulfilled, (state, action) => {
+            state.users = action.payload;
             state.isLoading = false;
             state.error = null;
         })

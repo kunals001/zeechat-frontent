@@ -1,27 +1,22 @@
 "use client"
 import Link from 'next/link'
 import { AnimatedGradientTextDemo } from '@/components/Layouts/ButtonShine';
-import { useState ,useEffect} from 'react';
 import NavMessage  from './NavMessage';
 import { IconBell } from '@tabler/icons-react';
-import axios from 'axios';
-import type{ User } from '@/redux/type';
+import { useAppDispatch, useAppSelector } from '@/redux/hooks';
+import { getFollowRequests } from '@/redux/slice/authSlice';
+import { useState, useEffect} from 'react';
 
 const Navbar = () => {
-    const API_URL = process.env.NEXT_PUBLIC_API_KEY
-    const [selected, setSelected] = useState(false);
-    const [followRequests, setFollowRequests] = useState<User[]>([]);
 
-    useEffect(() => {
-      const fetchFollowRequests = async () => {
-        const { data } = await axios.get(`${API_URL}/api/users/follow-requests`);
-        setFollowRequests(data.followRequests); 
-      };
+  const [selected, setSelected] = useState(false);
 
-      if(selected)fetchFollowRequests();
-    }, [selected, API_URL]);
+  const dispatch = useAppDispatch();
+  const { followRequests } = useAppSelector((state) => state.auth);
 
-
+  useEffect(() => {
+    dispatch(getFollowRequests()).unwrap();
+  }, [dispatch]);
 
   return (
     <header className=' w-full md:h-[4vw] md:px-[10vw] h-[6vh] px-[1vh] flex items-center justify-between bg-zinc-900'>
@@ -45,7 +40,7 @@ const Navbar = () => {
 
                 <div className={`md:w-[18vw] md:h-[22vw] w-[27vh] h-[30vh] absolute md:top-[3vw] top-[5.2vh] md:right-[0vw] right-0.5 bg-zinc-900 rounded-md transition-all duration-300 ease-in-out overflow-y-scroll hide-scrollbar transform  z-20 ${selected ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-20"} md:p-2 p-1`}>
 
-                    <NavMessage followRequests={followRequests} setFollowRequests={setFollowRequests}/>
+                    <NavMessage followRequests={followRequests}/>
                 </div>
             </div>
         </div>

@@ -5,6 +5,8 @@ import NavigationBar from './NavigationBar';
 import Chats from './Chats';
 import Status from './Status';
 import Profile from './Profile';
+import Explore from './Explore';
+import Groups from './Groups';
 
 const MainNavigation = () => {
 
@@ -27,7 +29,8 @@ const MainNavigation = () => {
         <div className="">
           {tab === 'chats' && <Chats/>}
           {tab === 'status' && <Status/>}
-          {tab === 'groups' && <div>Groups</div>}
+          {tab === 'explore' && <Explore/>}
+          {tab === 'groups' && <Groups/>}
           {tab === 'profile' && <Profile/>}
         </div>
       </div>

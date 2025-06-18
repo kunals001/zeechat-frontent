@@ -1,8 +1,8 @@
 "use client";
-import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { checkAuth } from '@/redux/slice/authSlice';
-import { useEffect } from 'react';
-import Loading from '../Layouts/Loading';
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { checkAuth } from "@/redux/slice/authSlice";
+import { useEffect } from "react";
+import Loading from "../Layouts/Loading";
 
 export const CheckUser = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useAppDispatch();
@@ -14,7 +14,7 @@ export const CheckUser = ({ children }: { children: React.ReactNode }) => {
 
   if (isCheckingAuth) {
     return (
-      <div className="w-full h-screen flex justify-center items-center backdrop-blur-lg z-10">
+      <div className="w-full h-screen flex justify-center items-center">
         <Loading />
       </div>
     );

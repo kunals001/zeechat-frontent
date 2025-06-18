@@ -3,12 +3,13 @@ import React from 'react'
 import Image from 'next/image'
 import { CoolMode } from "@/components/magicui/cool-mode";
 import type{User} from "@/redux/type"
-import axios from 'axios';
+import { useAppDispatch} from "@/redux/hooks";
+import { acceptFollowRequest } from '@/redux/slice/authSlice';
 
 
-const NavMessage = ({followRequests,setFollowRequests}:{followRequests:User[]; setFollowRequests: React.Dispatch<React.SetStateAction<User[]>>;}) => {
+const NavMessage = ({followRequests}:{followRequests:User[]}) => {
 
-  const API_URL_3 = process.env.NEXT_PUBLIC_API_KEY_3
+  const dispatch = useAppDispatch();
 
   if (!followRequests || followRequests.length === 0) {
     return (
@@ -20,8 +21,7 @@ const NavMessage = ({followRequests,setFollowRequests}:{followRequests:User[]; s
 
   const handelAcceptRequest = async (userId: string) => {
   try {
-    await axios.post(`${API_URL_3}/accept-follow-request`, { userId });
-    setFollowRequests(prev => prev.filter(user => user._id !== userId));
+    await dispatch(acceptFollowRequest({ userId })).unwrap();
   } catch (error) {
     console.log("Error accepting request", error);
   }
