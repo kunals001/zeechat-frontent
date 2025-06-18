@@ -5,37 +5,17 @@ import React from "react";
 import type { User } from "@/redux/type";
 
 
-const FollowUser = ({ followUser }: { followUser: User[] }) => {
-  const { selectedConversation, setSelectedConversation, setSelectedUser } = useConversation();
-
-  const handleSelect = (user: User) => {
-  const safeUser = {
-    ...user,
-    profilePic: typeof user.profilePic === "string" ? user.profilePic : undefined,
-  };
-  setSelectedConversation(user._id);
-  setSelectedUser(safeUser);
-};
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>, user: User) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      handleSelect(user);
-    }
-  };
+const FollowUser = ({ followUsers }: { followUsers: User[] }) => {
 
   return (
     <div className="w-full">
-      {followUser.map((user) => (
+      {followUsers.map((user) => (
         <div
           key={user._id}
           role="button"
           tabIndex={0}
-          onClick={() => handleSelect(user)}
-          onKeyDown={(e) => handleKeyDown(e, user)}
-          className={`friend w-full md:px-[1vh] flex md:gap-[.9vw] px-[1.3vh] cursor-pointer hover:bg-zinc-800 transition-all duration-100 gap-[1vh] ${
-            selectedConversation === user._id ? "bg-[#303030]" : ""
-          }`}
+          className={`friend w-full md:px-[1vh] flex md:gap-[.9vw] px-[1.3vh] cursor-pointer hover:bg-zinc-800 transition-all duration-100 gap-[1vh] 
+          `}
         >
           {/* Image container */}
           <div className="flex items-center justify-center md:p-2 p-1">

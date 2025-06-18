@@ -30,7 +30,7 @@ const NavMessage = ({followRequests}:{followRequests:User[]}) => {
   return (
   <div className="">
     {followRequests.map((user) => (
-       <div key={user._id} className='w-full md:px-[1vh] md:py-[.5vh] p-[1vh]  bg-zinc-800 rounded-lg flex gap-[1vh]'>
+       <div key={user._id} className='w-full md:px-[1vh] md:py-[.5vh] p-[1vh]  bg-zinc-700 rounded-lg flex gap-[1vh]'>
         <Image width={50} height={50} src="/next.svg" alt="user profile" className='md:w-[2vw] md:h-[2vw] w-[4vh] h-[4vh] rounded-xl object-cover border-2 border-prime'/>
 
         <div className="flex flex-col gap-[.5vh]">

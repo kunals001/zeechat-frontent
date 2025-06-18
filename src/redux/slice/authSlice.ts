@@ -194,16 +194,19 @@ export const getFollowRequests = createAsyncThunk<User[], void, { rejectValue: E
 
 // get following users
 
-export const getFollowingUsers = createAsyncThunk<User, void, { rejectValue: ErrorPayload }>('user/get-following-users', async (_, { rejectWithValue }) => {
-  try {
-    const response = await axios.get(`${API_URL}/api/users/get-following-users`);
-    return response.data.following;
-  } catch (error) {
-    if (error instanceof AxiosError) {
-      return rejectWithValue(error.response?.data.error);
+export const getFollowingUsers = createAsyncThunk<User[], void, { rejectValue: ErrorPayload }>(
+  'user/get-following-users',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`${API_URL}/api/users/get-following-users`);
+      return response.data.following; // 👈 FIXED: directly return array
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        return rejectWithValue(error.response?.data.error);
+      }
     }
   }
-})
+);
 
 // get users
 
@@ -328,6 +331,7 @@ const authSlice = createSlice({
 
         .addCase(getFollowingUsers.pending, loading)
         .addCase(getFollowingUsers.fulfilled, (state, action) => {
+            state.followUsers = action.payload;
             state.isLoading = false;
             state.error = null;
         })

@@ -2,6 +2,7 @@ import React from 'react'
 import { IconSquareRoundedPlus} from '@tabler/icons-react';
 import { Search } from 'lucide-react';
 import "@/app/globals.css"
+import ChatList from './ChatList';
 
 const Chats = () => {
   return (
@@ -23,6 +24,7 @@ const Chats = () => {
       </div>
 
       <div className="">
+        <ChatList/>
       </div>
     </div>
   )

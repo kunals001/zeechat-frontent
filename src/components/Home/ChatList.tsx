@@ -6,11 +6,18 @@ import { getFollowingUsers } from '@/redux/slice/authSlice'
 
 const ChatList = () => {
 
-  
+  const {followUsers = []} = useAppSelector(state => state.auth)
+  const dispatch = useAppDispatch()
+
+  console.log(followUsers)
+
+  useEffect(() => {
+    dispatch(getFollowingUsers()).unwrap();
+  },[dispatch])
 
   return (
     <div className='w-full overflow-hidden'>
-      <FollowUser followUser={followUser}  />
+      <FollowUser followUsers={followUsers}  />
     </div>
   )
 }

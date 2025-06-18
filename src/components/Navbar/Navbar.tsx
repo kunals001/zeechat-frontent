@@ -38,7 +38,7 @@ const Navbar = () => {
                    
                 </div>
 
-                <div className={`md:w-[18vw] md:h-[22vw] w-[27vh] h-[30vh] absolute md:top-[3vw] top-[5.2vh] md:right-[0vw] right-0.5 bg-zinc-900 rounded-md transition-all duration-300 ease-in-out overflow-y-scroll hide-scrollbar transform  z-20 ${selected ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-20"} md:p-2 p-1`}>
+                <div className={`md:w-[18vw] md:h-[22vw] w-[27vh] h-[30vh] absolute md:top-[3vw] top-[5.2vh] md:right-[0vw] right-0.5 bg-zinc-800 rounded-md transition-all duration-300 ease-in-out overflow-y-scroll hide-scrollbar transform  z-20 ${selected ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-20"} md:p-2 p-1`}>
 
                     <NavMessage followRequests={followRequests}/>
                 </div>
