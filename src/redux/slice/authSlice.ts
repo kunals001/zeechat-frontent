@@ -7,6 +7,7 @@ type ErrorPayload = string;
 
 axios.defaults.withCredentials = true;
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import Cookies from "js-cookie";
 
 interface AuthState {
   user: User | null;
@@ -60,16 +61,28 @@ export const verifyEmail = createAsyncThunk<User,{code: string},{ rejectValue: E
 
 /// Login
 
-export const login = createAsyncThunk<User,{ identifier: string; password: string; },{ rejectValue: ErrorPayload }>('auth/login', async (data, { rejectWithValue }) => {
+export const login = createAsyncThunk<
+  User,
+  { identifier: string; password: string },
+  { rejectValue: ErrorPayload }
+   >('auth/login', async (data, { rejectWithValue }) => {
   try {
     const response = await axios.post(`${API_URL}/api/auth/login`, data);
-    return response.data.user;
+
+    const { token, user } = response.data;
+
+    // ✅ Save token in cookie and localStorage
+    Cookies.set("token", token, { expires: 10 }); // expires in 7 days
+    localStorage.setItem("token", token);
+
+    return user; // ✅ return user
   } catch (error) {
     if (error instanceof AxiosError) {
       return rejectWithValue(error.response?.data.message);
     }
   }
-})
+});
+
 
 /// Logout
 

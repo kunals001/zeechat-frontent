@@ -4,6 +4,7 @@ import "./globals.css";
 import ReduxProvider from "../redux/provider";
 import { Toaster } from "react-hot-toast";
 import { CheckUser } from "@/components/Secure/CheckUser";
+import WebSocketProvider from '../redux/WebSocketProvider';
 
 const Josefin = Josefin_Sans({
   variable: "--font-josefin-sans",
@@ -35,8 +36,10 @@ export default function RootLayout({
         className={`${poppins.variable} ${Josefin.variable}`} cz-shortcut-listen="true">
         <ReduxProvider>
           <CheckUser>
+            <WebSocketProvider>
             {children}
             <Toaster position="top-right" />
+            </WebSocketProvider>
           </CheckUser>
         </ReduxProvider>
       </body>

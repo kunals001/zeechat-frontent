@@ -1,41 +1,48 @@
+// hooks/useWebSocket.ts
+"use client";
 import { useEffect, useRef } from "react";
 import { useAppDispatch } from "@/redux/hooks";
 import { receiveMessage } from "@/redux/slice/conversationSlice";
 import Cookies from "js-cookie";
+
+let isConnected = false; // ✅ connection flag outside the hook
 
 export const useWebSocket = () => {
   const dispatch = useAppDispatch();
   const socketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    const token = Cookies.get("token") || localStorage.getItem("token");
-    console.log("🔐 Token in useWebSocket:", token);
+    if (isConnected) return;
 
+    const token = Cookies.get("token") || localStorage.getItem("token");
     if (!token) {
-      console.warn("🚫 No token available for WebSocket");
+      console.warn("🚫 No token for WebSocket");
       return;
     }
 
-    const wsUrl = `ws://localhost:5000?token=${token}`;
-    console.log("🌐 Connecting to WebSocket:", wsUrl);
-
-    const ws = new WebSocket(wsUrl);
+    const ws = new WebSocket(`ws://localhost:5000?token=${token}`);
     socketRef.current = ws;
+    isConnected = true;
 
     ws.onopen = () => console.log("✅ WebSocket connected");
     ws.onmessage = (e) => {
-      const data = JSON.parse(e.data);
-      console.log("📩 Message from server:", data);
-
-      if (data.type === "receive_message") {
-        dispatch(receiveMessage(data.payload.message));
+      try {
+        const data = JSON.parse(e.data);
+        if (data.type === "receive_message") {
+          dispatch(receiveMessage(data.payload.message));
+        }
+      } catch (err) {
+        console.error("❌ WebSocket parse error", e.data);
       }
     };
-    ws.onerror = (e) => console.error("❌ WebSocket error", e);
-    ws.onclose = () => console.warn("🔌 WebSocket closed");
+    ws.onclose = () => {
+      console.warn("🔌 WebSocket disconnected");
+      isConnected = false;
+    };
 
     return () => {
       ws.close();
+      isConnected = false;
     };
   }, [dispatch]);
 

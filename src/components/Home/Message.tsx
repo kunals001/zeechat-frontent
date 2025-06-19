@@ -1,18 +1,18 @@
 "use client";
-import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
-import { IconMoodEdit, IconSend2 } from "@tabler/icons-react";
+import Image from "next/image";
+import { IconSend2, IconMoodEdit } from "@tabler/icons-react";
 import { EllipsisVertical } from "lucide-react";
-import NoChatSelected from "./NoChatSelected";
+import Cookies from "js-cookie";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
   fetchMessages,
   receiveMessage,
   sendMessage,
 } from "@/redux/slice/conversationSlice";
-import Cookies from "js-cookie";
+import NoChatSelected from "./NoChatSelected";
 
-
+const socketRef = { current: null as WebSocket | null }; 
 const Message = () => {
   const dispatch = useAppDispatch();
   const { selectedUser, messages } = useAppSelector((state) => state.conversation);
@@ -20,56 +20,62 @@ const Message = () => {
   const [message, setMessage] = useState("");
   const chatRef = useRef<HTMLDivElement>(null);
 
-  // Fetch messages when selected user changes
+  // Load messages when selected user changes
   useEffect(() => {
     if (selectedUser?._id) dispatch(fetchMessages(selectedUser._id));
   }, [selectedUser, dispatch]);
 
-  // Scroll to bottom on new messages
+  // Scroll chat to bottom on message update
   useEffect(() => {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }
   }, [messages]);
 
-  // WebSocket real-time receiver
-useEffect(() => {
-  const token = Cookies.get("token") || localStorage.getItem("token");
+  // ✅ One-time WebSocket connection
+  useEffect(() => {
+    if (socketRef.current) return; // ⛔ Already connected
 
-  if (!token) {
-    console.warn("🚫 No token available for WebSocket");
-    return;
-  }
+    const token = localStorage.getItem("token") || Cookies.get("token");
 
-  const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL}?token=${token}`;
-  console.log("🌐 Connecting to WebSocket:", wsUrl);
-
-  const socket = new WebSocket(wsUrl);
-
-  socket.onopen = () => console.log("✅ WebSocket connected");
-
-  socket.onmessage = (e) => {
-    const data = JSON.parse(e.data);
-    if (data.type === "receive_message") {
-      dispatch(receiveMessage(data.payload.message));
+    if (!token) {
+      console.warn("🚫 No token for WebSocket");
+      return;
     }
-  };
 
-  socket.onerror = (e) => console.error("❌ WebSocket error", e);
-  socket.onclose = () => console.warn("🔌 WebSocket closed");
+    const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL}?token=${token}`;
+    console.log("🌐 Connecting to WebSocket:", wsUrl);
 
-  return () => socket.close();
-}, [dispatch]);
+    const socket = new WebSocket(wsUrl);
+    socketRef.current = socket;
+
+    socket.onopen = () => console.log("✅ WebSocket connected");
+
+    socket.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data.type === "receive_message") {
+          dispatch(receiveMessage(data.payload.message));
+        }
+      } catch (err) {
+        console.log("❌ WebSocket parse error", err);
+      }
+    };
+
+    socket.onclose = (e) => {
+      console.warn("🔌 WebSocket closed", e.reason);
+      socketRef.current = null; // allow reconnect if needed later
+    };
+
+    return () => {
+      socket.close();
+      socketRef.current = null;
+    };
+  }, [dispatch]);
 
   const handleSendMessage = () => {
     if (!message.trim() || !selectedUser) return;
-    dispatch(
-      sendMessage({
-        userId: selectedUser._id,
-        message: message.trim(),
-        type: "text",
-      })
-    );
+    dispatch(sendMessage({ userId: selectedUser._id, message, type: "text" }));
     setMessage("");
   };
 
@@ -84,7 +90,6 @@ useEffect(() => {
             alt="message theme"
             className="w-full h-full object-cover relative"
           />
-
           <div className="absolute w-full h-full bg-[rgba(0,0,0,0.68)] top-0 flex flex-col">
             {/* Header */}
             <div className="w-full h-[4vw] bg-[#141414] px-[2vw] flex items-center">
@@ -94,13 +99,10 @@ useEffect(() => {
                   alt="user profile"
                   fill
                   className="object-cover"
-                  sizes="(min-width: 768px) 3.2vw, 6vh"
-                  loading="eager"
-                  priority
                 />
               </div>
               <div className="flex justify-between md:w-[calc(100%-6vh)] items-center">
-                <div className="flex flex-col md:gap-[.4vh] gap-[.5vh] ml-[1vh]">
+                <div className="ml-[1vh]">
                   <h3 className="md:text-[1vw] font-second text-zinc-200 text-[2vh]">
                     {selectedUser.fullName} |{" "}
                     <span className="text-[.8vw] text-zinc-400">{selectedUser.userName}</span>
@@ -116,10 +118,7 @@ useEffect(() => {
             </div>
 
             {/* Chat area */}
-            <div
-              ref={chatRef}
-              className="chat w-full h-[calc(100%-9vw)] p-2 overflow-y-scroll hide-scrollbar flex flex-col gap-2 "
-            >
+            <div ref={chatRef} className="chat w-full h-[calc(100%-9vw)] p-2 overflow-y-scroll hide-scrollbar flex flex-col gap-2">
               {messages.length > 0 ? (
                 messages.map((msg) => (
                   <div
@@ -138,7 +137,7 @@ useEffect(() => {
               )}
             </div>
 
-            {/* Input box */}
+            {/* Input */}
             <div className="w-full h-[4vw] flex items-center justify-center bg-[#141414] absolute bottom-0 md:px-[1vw]">
               <div className="relative flex items-center w-full">
                 <input
@@ -149,10 +148,7 @@ useEffect(() => {
                   onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                   className="w-full md:h-[3vw] bg-zinc-800 text-zinc-200 placeholder:text-zinc-500 md:px-[4vw] px-[1vh] py-[1vh] rounded-lg outline-none"
                 />
-                <IconSend2
-                  onClick={handleSendMessage}
-                  className="text-zinc-500 md:size-8 absolute md:right-5 right-8 cursor-pointer"
-                />
+                <IconSend2 onClick={handleSendMessage} className="text-zinc-500 md:size-8 absolute md:right-5 right-8 cursor-pointer" />
                 <IconMoodEdit className="text-zinc-400 md:size-8 absolute md:left-5 right-16 cursor-pointer" />
               </div>
             </div>
