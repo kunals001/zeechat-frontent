@@ -66,7 +66,7 @@ export const login = createAsyncThunk<User,{ identifier: string; password: strin
     return response.data.user;
   } catch (error) {
     if (error instanceof AxiosError) {
-      return rejectWithValue(error.response?.data.error);
+      return rejectWithValue(error.response?.data.message);
     }
   }
 })
@@ -296,7 +296,11 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.user = action.payload;
       })
-      .addCase(checkAuth.rejected, error)
+      .addCase(checkAuth.rejected, (state) => {
+        state.isLoading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+      })
       .addCase(sendFollowRequest.pending, loading)
         .addCase(sendFollowRequest.fulfilled, (state, action) => {
             state.user = action.payload;

@@ -14,7 +14,6 @@ const page = () => {
       <div className="md:px-[10vw] md:mt-2">
         <MainNavigation/>
       </div>
-      
       </div>
     </AuthCheck>
   )

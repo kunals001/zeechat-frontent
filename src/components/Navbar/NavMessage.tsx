@@ -31,7 +31,7 @@ const NavMessage = ({followRequests}:{followRequests:User[]}) => {
   <div className="">
     {followRequests.map((user) => (
        <div key={user._id} className='w-full md:px-[1vh] md:py-[.5vh] p-[1vh]  bg-zinc-700 rounded-lg flex gap-[1vh]'>
-        <Image width={50} height={50} src="/next.svg" alt="user profile" className='md:w-[2vw] md:h-[2vw] w-[4vh] h-[4vh] rounded-xl object-cover border-2 border-prime'/>
+        <Image width={50} height={50} src={user.profilePic} alt="user profile" className='md:w-[2vw] md:h-[2vw] w-[4vh] h-[4vh] rounded-xl object-cover border-2 border-prime'/>
 
         <div className="flex flex-col gap-[.5vh]">
           <h2 className='text-[1.5vh] md:text-[1vw] text-white leading-none'>{user.fullName}<span className='text-[1vh] md:text-[.6vw] text-zinc-300'>2 hours ago</span></h2>

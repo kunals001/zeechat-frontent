@@ -7,6 +7,7 @@ import Status from './Status';
 import Profile from './Profile';
 import Explore from './Explore';
 import Groups from './Groups';
+import Message from './Message';
 
 const MainNavigation = () => {
 
@@ -32,6 +33,10 @@ const MainNavigation = () => {
           {tab === 'explore' && <Explore/>}
           {tab === 'groups' && <Groups/>}
           {tab === 'profile' && <Profile/>}
+        </div>
+
+        <div className="">
+          <Message/>
         </div>
       </div>
   )

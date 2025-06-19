@@ -9,8 +9,6 @@ const ChatList = () => {
   const {followUsers = []} = useAppSelector(state => state.auth)
   const dispatch = useAppDispatch()
 
-  console.log(followUsers)
-
   useEffect(() => {
     dispatch(getFollowingUsers()).unwrap();
   },[dispatch])

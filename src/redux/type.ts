@@ -26,3 +26,19 @@ export type User = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type MessageType = "text" | "image" | "video" | "file";
+
+export interface Message {
+  _id: string;
+  sender: {
+    _id: string;
+    fullName: string;
+    userName: string;
+    profilePic: string;
+  };
+  receiver?: string;
+  message: string;
+  type: MessageType;
+  createdAt: string;
+}

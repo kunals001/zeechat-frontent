@@ -4,10 +4,14 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'ik.imagekit.io',
-        port: '',
-        pathname: '/tzq13ojas/**',
+         protocol: "https",
+      hostname: "ik.imagekit.io",
+      pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "zeechat-kunal-singh-2025.s3.ap-south-1.amazonaws.com",
+        pathname: "/**", 
       },
     ], 
   },
