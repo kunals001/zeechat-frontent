@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import {useSearchParams } from 'next/navigation';
 import NavigationBar from './NavigationBar';
 import Chats from './Chats';
-import Status from './Status';
 import Profile from './Profile';
 import Explore from './Explore';
 import Groups from './Groups';
@@ -29,7 +28,6 @@ const MainNavigation = () => {
 
         <div className="">
           {tab === 'chats' && <Chats/>}
-          {tab === 'status' && <Status/>}
           {tab === 'explore' && <Explore/>}
           {tab === 'groups' && <Groups/>}
           {tab === 'profile' && <Profile/>}

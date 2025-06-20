@@ -97,12 +97,6 @@ const conversationSlice = createSlice({
       .addCase(fetchMessages.fulfilled, (state, action) => {
         state.isLoading = false;
         state.messages = action.payload.messages;
-        if (!state.selectedUser) {
-          const otherUser = action.payload.participants.find(
-            (u) => u._id !== state.selectedUser?._id
-          );
-          state.selectedUser = otherUser || null;
-        }
       })
       .addCase(fetchMessages.rejected, (state, action) => {
         state.isLoading = false;
@@ -114,9 +108,25 @@ const conversationSlice = createSlice({
         state.error = null;
       })
       .addCase(sendMessage.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.messages.push(action.payload);
-      })
+  state.isLoading = false;
+
+  // Ensure receiver is attached to message if not already
+  const msg = action.payload;
+
+  // Only set receiver if it's missing
+  if (!msg.receiver && state.selectedUser) {
+    msg.receiver = {
+      _id: state.selectedUser._id,
+      fullName: state.selectedUser.fullName,
+      userName: state.selectedUser.userName,
+      profilePic: state.selectedUser.profilePic,
+    };
+  }
+
+  state.messages.push(msg);
+})
+
+
       .addCase(sendMessage.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload || "Error sending message";

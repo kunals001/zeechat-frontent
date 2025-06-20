@@ -37,7 +37,12 @@ export interface Message {
     userName: string;
     profilePic: string;
   };
-  receiver?: string;
+  receiver?: {
+    _id: string;
+    fullName: string;
+    userName: string;
+    profilePic: string;
+  }; // ✅ Change from string to User-like object
   message: string;
   type: MessageType;
   createdAt: string;

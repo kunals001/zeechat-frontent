@@ -1,15 +1,12 @@
-// app/store/storage.ts
-const isServer = typeof window === 'undefined';
+import type { WebStorage } from 'redux-persist';
 
-const createNoopStorage = () => {
-  return {
-    getItem: (_key: string) => Promise.resolve(null),
-    setItem: (_key: string, value: string) => Promise.resolve(value),
-    removeItem: (_key: string) => Promise.resolve(),
-  };
-};
+const createNoopStorage = (): WebStorage => ({
+  getItem: async (): Promise<string | null> => null,
+  setItem: async (): Promise<void> => {},
+  removeItem: async (): Promise<void> => {},
+});
 
-const storage = !isServer
+const storage: WebStorage = typeof window !== 'undefined'
   ? require('redux-persist/lib/storage').default
   : createNoopStorage();
 

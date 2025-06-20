@@ -50,7 +50,14 @@ export const signup = createAsyncThunk<User, {fullName: string; userName: string
 export const verifyEmail = createAsyncThunk<User,{code: string},{ rejectValue: ErrorPayload }>('auth/verify-email', async (data, { rejectWithValue }) => {
   try {
     const response = await axios.post(`${API_URL}/api/auth/verify-email`, data);
-    return response.data.user;
+    const { token,user } = response.data;
+
+    // ✅ Save token in cookie and localStorage
+    Cookies.set("token", token, { expires: 10 }); // expires in 7 days
+    localStorage.setItem("token", token);
+
+    return user; // ✅ return user
+
   } catch (error) {
     if (error instanceof AxiosError) {
       return rejectWithValue(error.response?.data.error);

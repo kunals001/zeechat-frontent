@@ -26,15 +26,6 @@ const NavigationBar = () => {
       outlineIcon: <IconMessage className="text-zinc-200 md:size-7" />,
     },
     {
-      tab: "status",
-      filledIcon: (
-        <IconChartDonut3 stroke={3} className="text-zinc-200 md:size-7" />
-      ),
-      outlineIcon: (
-        <IconChartDonut3 stroke={2} className="text-zinc-200 md:size-7" />
-      ),
-    },
-    {
       tab: "groups",
       filledIcon: (
         <IconUsersGroup stroke={3} className="text-zinc-200 md:size-7" />
