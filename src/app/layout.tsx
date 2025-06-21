@@ -1,10 +1,11 @@
+import WebSocketProvider from '../redux/WebSocketProvider';
 import type { Metadata } from "next";
 import { Josefin_Sans, Poppins } from "next/font/google";
 import "./globals.css";
 import ReduxProvider from "../redux/provider";
 import { Toaster } from "react-hot-toast";
 import { CheckUser } from "@/components/Secure/CheckUser";
-import WebSocketProvider from '../redux/WebSocketProvider';
+
 
 const Josefin = Josefin_Sans({
   variable: "--font-josefin-sans",

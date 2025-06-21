@@ -161,6 +161,8 @@ const Message = () => {
             src="https://zeechat-kunal-singh-2025.s3.ap-south-1.amazonaws.com/uploads/theme.avif"
             alt="message theme"
             className="w-full h-full object-cover relative"
+            priority={true}
+            loading="eager"
           />
           <div className="absolute w-full h-full bg-[rgba(0,0,0,0.68)] top-0 flex flex-col">
             <div className="w-full h-[4vw] bg-[#141414] px-[2vw] flex items-center">
@@ -168,7 +170,8 @@ const Message = () => {
                 <Image
                   src={selectedUser.profilePic || "/default-profile.png"}
                   alt="user profile"
-                  fill
+                  width={200}
+                  height={200}
                   className="object-cover"
                 />
               </div>
