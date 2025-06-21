@@ -28,7 +28,7 @@ const ForgotForm = ({ email, setEmail, handleForgotPassword, isLoading }: Props)
         </button>
       </form>
 
-      <p className='text-center md:text-[.9vw] text-[1.6vh] text-zinc-300 mt-3'>Don't have an account? <a href="/signup" className='text-purple-400 font-[500]'>Signup</a></p>
+      <p className='text-center md:text-[.9vw] text-[1.6vh] text-zinc-300 mt-3'>Don&apos;t have an account? <a href="/signup" className='text-purple-400 font-[500]'>Signup</a></p>
     </div>
   )
 }

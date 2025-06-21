@@ -1,5 +1,5 @@
 "use client"
-import React,{ useEffect,useState} from 'react'
+import React,{ useEffect} from 'react'
 import FollowUser from './FollowUser'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { getFollowingUsers } from '@/redux/slice/authSlice'

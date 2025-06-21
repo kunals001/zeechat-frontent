@@ -1,6 +1,5 @@
 "use client";
 import {
-  IconChartDonut3,
   IconCompass,
   IconCompassFilled,
   IconMessage,

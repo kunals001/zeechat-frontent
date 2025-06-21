@@ -19,10 +19,8 @@ const SearchResult = ({ users = [] }: { users?: User[] }) => {
         const data = { userId };
       await dispatch(sendFollowRequest(data)).unwrap();
       toast.success('Follow request sent');
-    } catch (error: any) {
-      toast.error(error?.message || 'Error sending follow request');
-    } finally {
-      setLoadingUserId(null);
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -32,10 +30,8 @@ const SearchResult = ({ users = [] }: { users?: User[] }) => {
         const data = { userId };
       await dispatch(unfollow(data)).unwrap();
       toast.success('Unfollowed successfully');
-    } catch (error: any) {
-      toast.error(error?.message || 'Error unfollowing user');
-    } finally {
-      setLoadingUserId(null);
+    } catch (error) {
+      console.log(error);
     }
   };
 

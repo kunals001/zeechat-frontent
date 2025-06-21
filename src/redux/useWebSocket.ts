@@ -32,7 +32,7 @@ export const useWebSocket = () => {
           dispatch(receiveMessage(data.payload.message));
         }
       } catch (err) {
-        console.error("❌ WebSocket parse error", e.data);
+        console.log("WS error", err);
       }
     };
     ws.onclose = () => {
@@ -46,7 +46,7 @@ export const useWebSocket = () => {
     };
   }, [dispatch]);
 
-  const sendWSMessage = (payload: any) => {
+  const sendWSMessage = (payload:string) => {
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify(payload));
     }

@@ -1,7 +1,6 @@
 "use client"
 import React from 'react'
 import Image from 'next/image'
-import { CoolMode } from "@/components/magicui/cool-mode";
 import type{User} from "@/redux/type"
 import { useAppDispatch} from "@/redux/hooks";
 import { acceptFollowRequest } from '@/redux/slice/authSlice';
@@ -39,8 +38,7 @@ const NavMessage = ({followRequests}:{followRequests:User[]}) => {
           <p className='text-[1.2vh] md:text-[.8vw] text-zinc-200 leading-none'>{user?.userName}</p>
         </div>
 
-        <CoolMode>
-        <button onClick={() => handelAcceptRequest(user._id.toString())} className='text-[1.2vh] md:px-[.5vw] md:py-[.2vh] bg-gradient-to-l from-prime to-second md:rounded-md bg-gra md:text-[.8vw] text-zinc-100 leading-none translate-x-7 cursor-pointer'>accept</button></CoolMode>
+        <button onClick={() => handelAcceptRequest(user._id.toString())} className='text-[1.2vh] md:px-[.5vw] md:py-[.2vh] bg-gradient-to-l from-prime to-second md:rounded-md bg-gra md:text-[.8vw] text-zinc-100 leading-none translate-x-7 cursor-pointer'>accept</button>
     </div>
     ))}
    

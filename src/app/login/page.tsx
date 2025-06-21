@@ -88,7 +88,7 @@ const Page = () => {
           </form>
 
           <p className='text-center md:text-[.9vw] text-[1.6vh] text-zinc-300 mt-3'>
-            Don't have an account? <a href="/signup" className='text-purple-400 font-[500]'>Signup</a>
+            Don&apos;t have an account? <a href="/signup" className='text-purple-400 font-[500]'>Signup</a>
           </p>
         </div>
       </div>

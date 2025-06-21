@@ -8,7 +8,7 @@ import ForgotForm from '@/components/Auth/ForgotForm'
 import LinkSend from '@/components/Auth/LinkSend'
 import {Redirect} from '@/components/Secure/Redirect'
 
-const page = () => {
+const Page = () => {
 
   const [email, setEmail] = useState("");
 
@@ -53,4 +53,4 @@ const page = () => {
   )
 }
 
-export default page
+export default Page

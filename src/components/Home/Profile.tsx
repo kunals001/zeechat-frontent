@@ -60,6 +60,7 @@ const Profile = () => {
       await dispatch(logout()).unwrap()
       toast.success('Logout successful')
     } catch (err) {
+      console.log(err)
       
     }
   }

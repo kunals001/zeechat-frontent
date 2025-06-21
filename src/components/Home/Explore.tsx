@@ -1,5 +1,5 @@
 import { Loader2, Search } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import SearchResult from './SearchResult';
 import { getUsers } from '@/redux/slice/authSlice';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
@@ -10,28 +10,25 @@ const Explore = () => {
     const dispatch = useAppDispatch();
     const { users,isLoading } = useAppSelector((state) => state.auth);
 
-  const [query, setQuery] = useState('');
+    const [query, setQuery] = useState('');
 
-  // Debounce effect for smoother search
-  useEffect(() => {
-    const delaySearch = setTimeout(() => {
-      if (query.trim() !== "") {
-        fetchUsers();
-      }
-    }, 500); 
-
-    return () => clearTimeout(delaySearch);
-  }, [query]);
-
-  const fetchUsers = async () => {
+    const fetchUsers = useCallback(async () => {
       try {
-        await dispatch(getUsers({query})).unwrap();
+        await dispatch(getUsers({ query })).unwrap();
       } catch (error) {
         console.log(error);
       }
-  }
+    }, [dispatch, query]);
 
-  
+    useEffect(() => {
+      const delaySearch = setTimeout(() => {
+        if (query.trim() !== "") {
+          fetchUsers();
+        }
+      }, 500);
+
+      return () => clearTimeout(delaySearch);
+    }, [query, fetchUsers]);
 
   return (
     <div className='md:w-[30vw] md:h-[calc(100vh-7vw)] w-full h-[calc(100vh-6vh)] text-white bg-[#181818f5] overflow-y-scroll hide-scrollbar border-r border-zinc-800'>

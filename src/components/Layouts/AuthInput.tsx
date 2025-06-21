@@ -1,6 +1,6 @@
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+import React from "react";
 
-const Input = ({ ...props }: InputProps) => {
+const Input = (props: React.InputHTMLAttributes<HTMLInputElement>) => {
 	return (
 		<div className='relative mb-1'>
 			<input

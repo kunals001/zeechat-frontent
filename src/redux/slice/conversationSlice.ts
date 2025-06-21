@@ -1,12 +1,10 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios, { AxiosError } from "axios";
-
-// Types
 import type { Message, User, MessageType } from "../type";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// ✅ Interfaces
+// Interfaces
 interface SendMessagePayload {
   userId: string;
   message: string;
@@ -27,6 +25,9 @@ interface ConversationState {
   selectedUser: User | null;
   isLoading: boolean;
   error: string | null;
+  typingUserIds: string[]; // users currently typing
+  onlineUsers: Record<string, boolean>; // userId -> true/false
+  lastSeenMap: Record<string, string>; // userId -> ISO string
 }
 
 const initialState: ConversationState = {
@@ -34,12 +35,15 @@ const initialState: ConversationState = {
   selectedUser: null,
   isLoading: false,
   error: null,
+  typingUserIds: [],
+  onlineUsers: {},
+  lastSeenMap: {},
 };
 
-// ✅ Fetch Messages
+// ✅ Fetch messages
 export const fetchMessages = createAsyncThunk<
   FetchMessagesResponse,
-  string, // userId
+  string,
   { rejectValue: string }
 >("conversation/fetchMessages", async (userId, { rejectWithValue }) => {
   try {
@@ -51,7 +55,7 @@ export const fetchMessages = createAsyncThunk<
   }
 });
 
-// ✅ Send Message
+// ✅ Send message
 export const sendMessage = createAsyncThunk<
   Message,
   SendMessagePayload,
@@ -69,25 +73,44 @@ export const sendMessage = createAsyncThunk<
   }
 });
 
-// ✅ Slice
 const conversationSlice = createSlice({
   name: "conversation",
   initialState,
   reducers: {
-    receiveMessage(state, action: PayloadAction<Message>) {
-      state.messages.push(action.payload);
-    },
-    selectUser(state, action: PayloadAction<User>) {
-      state.selectedUser = action.payload;
-      state.messages = [];
-    },
-    clearConversation(state) {
-      state.messages = [];
-      state.selectedUser = null;
-      state.error = null;
-      state.isLoading = false;
-    },
+  receiveMessage(state, action: PayloadAction<Message>) {
+    state.messages.push(action.payload);
   },
+  selectUser(state, action: PayloadAction<User>) {
+    state.selectedUser = action.payload;
+    state.messages = [];
+  },
+  clearConversation(state) {
+    state.messages = [];
+    state.selectedUser = null;
+    state.error = null;
+    state.isLoading = false;
+  },
+  setTyping(state, action: PayloadAction<boolean>) {
+    const selectedId = state.selectedUser?._id;
+    if (!selectedId) return;
+
+    if (action.payload) {
+      if (!state.typingUserIds.includes(selectedId)) {
+        state.typingUserIds.push(selectedId);
+      }
+    } else {
+      state.typingUserIds = state.typingUserIds.filter((id) => id !== selectedId);
+    }
+  },
+  updateOnlineStatus(state, action: PayloadAction<{ userId: string; isOnline: boolean }>) {
+    state.onlineUsers[action.payload.userId] = action.payload.isOnline;
+  },
+  updateLastSeen(state, action: PayloadAction<{ userId: string; lastSeen: string }>) {
+    state.lastSeenMap[action.payload.userId] = action.payload.lastSeen;
+  },
+},
+
+
   extraReducers: (builder) => {
     builder
       .addCase(fetchMessages.pending, (state) => {
@@ -102,31 +125,14 @@ const conversationSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload || "Error loading messages";
       })
-
       .addCase(sendMessage.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
       .addCase(sendMessage.fulfilled, (state, action) => {
-  state.isLoading = false;
-
-  // Ensure receiver is attached to message if not already
-  const msg = action.payload;
-
-  // Only set receiver if it's missing
-  if (!msg.receiver && state.selectedUser) {
-    msg.receiver = {
-      _id: state.selectedUser._id,
-      fullName: state.selectedUser.fullName,
-      userName: state.selectedUser.userName,
-      profilePic: state.selectedUser.profilePic,
-    };
-  }
-
-  state.messages.push(msg);
-})
-
-
+        state.isLoading = false;
+        state.messages.push(action.payload);
+      })
       .addCase(sendMessage.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload || "Error sending message";
@@ -134,5 +140,15 @@ const conversationSlice = createSlice({
   },
 });
 
-export const { receiveMessage, selectUser, clearConversation } = conversationSlice.actions;
+// ✅ Export actions
+export const {
+  receiveMessage,
+  selectUser,
+  clearConversation,
+  setTyping,
+  updateOnlineStatus,
+  updateLastSeen
+} = conversationSlice.actions;
+
+
 export default conversationSlice.reducer;
