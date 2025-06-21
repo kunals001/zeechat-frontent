@@ -1,8 +1,8 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { IconSend2, IconMoodEdit } from "@tabler/icons-react";
-import { EllipsisVertical } from "lucide-react";
+import { IconSend2, IconMoodEdit, IconMoodSmile } from "@tabler/icons-react";
+import { EllipsisVertical,Plus } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
   fetchMessages,
@@ -16,6 +16,7 @@ import NoChatSelected from "./NoChatSelected";
 import { socketRef } from "@/redux/useWebSocket";
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
+import Panel from "./Panel";
 
 
 function formatChatDate(dateStr: string): string {
@@ -44,6 +45,12 @@ const Message = () => {
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const [openPanel, setOpenPanel] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+
+  // ---- handel emoji outside click -----
+
   useEffect(() => {
   const handleClickOutside = (event: MouseEvent) => {
     // If emoji picker exists and click is outside
@@ -65,6 +72,27 @@ const Message = () => {
   }, [showEmojiPicker]);
 
 
+  // ---- handel Open Panel outside click -----
+
+  useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
+      setOpenPanel(false);
+    }
+  };
+
+  if (openPanel) {
+    document.addEventListener("mousedown", handleClickOutside);
+  }
+
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+  }, [openPanel]);
+
+
+
+   // ---- handel User typing online -----
   const dispatch = useAppDispatch();
   const { selectedUser, messages, typingUserIds, onlineUsers, lastSeenMap } = useAppSelector(
     (state) => state.conversation
@@ -73,6 +101,8 @@ const Message = () => {
 
   const [message, setMessage] = useState("");
   const chatRef = useRef<HTMLDivElement>(null);
+
+
 
   const isTyping = !!(
     selectedUser &&
@@ -86,6 +116,7 @@ const Message = () => {
   );
   const lastSeen = selectedUser && lastSeenMap ? lastSeenMap[selectedUser._id] ?? null : null;
 
+
   const groupedMessages: { [date: string]: typeof messages } = {};
   messages.forEach((msg) => {
     const dateLabel = formatChatDate(msg.createdAt);
@@ -93,11 +124,15 @@ const Message = () => {
     groupedMessages[dateLabel].push(msg);
   });
 
+
+
   useEffect(() => {
     if (selectedUser?._id) {
       dispatch(fetchMessages(selectedUser._id));
     }
   }, [selectedUser, dispatch]);
+
+
 
   useEffect(() => {
     if (chatRef.current) {
@@ -174,6 +209,9 @@ const Message = () => {
     };
   }, [selectedUser, dispatch]);
 
+
+   // ---- handel User Message -----
+
   const handleSendMessage = () => {
     if (!message.trim() || !selectedUser) return;
     dispatch(sendMessage({ userId: selectedUser._id, message, type: "text" }));
@@ -181,6 +219,7 @@ const Message = () => {
   };
 
 
+   // ---- handel User Last Scene -----
   function formatLastSeen(isoString: string): string {
   if (!isoString) return "Offline";
 
@@ -224,7 +263,7 @@ const Message = () => {
 
             {/* Header */}
             <div className="w-full md:h-[4vw] h-[8vh] bg-[#141414] px-[2vw] flex items-center">
-              <div className="relative md:w-[3.2vw] md:h-[3.2vw] w-[6vh] h-[6vh] rounded-full overflow-hidden">
+              <div className="relative md:w-[3.1vw] md:h-[3.1vw] w-[6vh] h-[6vh] rounded-full overflow-hidden">
                 <Image
                   src={selectedUser.profilePic || "/default-profile.png"}
                   alt="user profile"
@@ -248,8 +287,12 @@ const Message = () => {
                       : "Offline"}
                   </p>
                 </div>
-                <div className="text-zinc-400 cursor-pointer md:p-1 hover:bg-zinc-800 md:rounded-lg">
+                <div onClick={() => setOpenPanel(prev => !prev)} className={`text-zinc-400 cursor-pointer md:p-1 p-1.5 rounded-full  md:rounded-lg ${openPanel ? "bg-zinc-800" : "hover:bg-zinc-800"}`}>
                   <EllipsisVertical className="md:size-8 size-6" />
+                </div>
+
+                <div ref={panelRef} className={`transform transition-all duration-300 origin-top-right ${openPanel ? "scale-100" : "scale-0"} absolute top-[6vh] right-[1.5vh] md:top-[3.1vw] md:right-[2vw] ease-[cubic-bezier(0.4, 0, 0.2, 1)] overflow-hidden rounded-lg z-40 bg-zinc-900`}>
+                  <Panel/>
                 </div>
               </div>
             </div>
@@ -271,10 +314,22 @@ const Message = () => {
                         minute: "2-digit",
                       });
                       return (
-                        <div key={`${msg._id}-${index}`} className={`px-4 py-2 rounded-xl text-md md:text-base break-words whitespace-pre-wrap ${isSender ? "self-end bg-[#8375fe] rounded-br-none" : "self-start bg-zinc-800 rounded-bl-none"}`} style={{ maxWidth: "75%", width: "fit-content" }}>
+                        <div
+                          key={`${msg._id}-${index}`}
+                          className={`relative leading-tight px-4 py-2 rounded-xl text-md md:text-base break-words whitespace-pre-wrap ${isSender ? "self-end bg-[#8375fe] rounded-br-none" : "self-start bg-zinc-800 rounded-bl-none"} group`}
+                          style={{ maxWidth: "75%", width: "fit-content" }}
+                        >
+                          {/* Emoji Reaction Icon (appears on hover) */}
+                          <div className={`absolute top-1/2 -translate-y-1/2 ${isSender ? "-left-7" : "-right-7"} hidden group-hover:flex items-center justify-center cursor-pointer transition-all ease-in duration-300`}>
+                            <button className="text-xl hover:scale-110  cursor-pointer">
+                             <IconMoodSmile/>
+                            </button>
+                          </div>
+
+                          {/* Message Content */}
                           <div className="flex items-end gap-2">
                             <span>{msg.message}</span>
-                            <span className="text-[0.65rem] text-zinc-200 opacity-70 whitespace-nowrap">{time}</span>
+                            <span className="text-[0.65rem] text-zinc-200 opacity-70 whitespace-nowrap select-none">{time}</span>
                           </div>
                         </div>
                       );
@@ -304,12 +359,14 @@ const Message = () => {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                  className="w-full md:h-[3vw] bg-zinc-800 text-zinc-200 placeholder:text-zinc-500 md:px-[4vw] px-[1vh] md:py-[1vh] py-[1.2vh] rounded-lg outline-none"
+                  className="w-full md:h-[3vw] bg-zinc-800 text-zinc-200 placeholder:text-zinc-500 md:pr-[4vw] md:pl-[6vw] pl-[8vh] pr-[4vh] md:py-[1vh] py-[1.2vh] rounded-lg outline-none "
                 />
-                
-                <IconSend2 onClick={handleSendMessage} className="text-zinc-500 md:size-8 absolute md:right-5 right-4 cursor-pointer" />
 
-                <div ref={emojiPickerRef} className="flex items-center" onClick={() => setShowEmojiPicker((prev) => !prev)}><IconMoodEdit className="text-zinc-400 md:size-8 absolute md:left-5 right-14 cursor-pointer" /></div>
+                <Plus className="text-zinc-400 md:size-11 absolute md:right-5 left-3 cursor-pointer md:p-1.5 hover:bg-zinc-700 md:rounded-full transition-all duration-300"/>
+                
+                <IconSend2 onClick={handleSendMessage} className="text-[#8375FE] md:size-8 absolute md:right-5 right-2  cursor-pointer" />
+
+                <div ref={emojiPickerRef} className="flex items-center" onClick={() => setShowEmojiPicker((prev) => !prev)}><IconMoodEdit className="text-zinc-400 md:size-11 absolute md:left-14 left-10 cursor-pointer md:p-1.5 hover:bg-zinc-700 md:rounded-full transition-all duration-300" /></div>
               </div>
             </div>
 
@@ -332,7 +389,6 @@ const Message = () => {
             )}
 
 
-            
           </div>
         </div>
       ) : (

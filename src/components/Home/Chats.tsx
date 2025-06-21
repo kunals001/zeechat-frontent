@@ -35,7 +35,7 @@ const Chats = () => {
 
 
         {selectedUser && (
-        <div className="fixed inset-0 z-50 bg-zinc-900/50 flex items-center justify-center md:hidden ">
+        <div className="fixed inset-0 z-30 bg-zinc-900/50 flex items-center justify-center md:hidden ">
           <Message />
         </div>
       )}
