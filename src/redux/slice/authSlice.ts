@@ -146,7 +146,7 @@ export const checkAuth = createAsyncThunk<User, void, { rejectValue: ErrorPayloa
 
 // update profile 
 
-export const updateProfile = createAsyncThunk<User, {fullName: string; userName: string; bio: string; profilePic: string;}, { rejectValue: ErrorPayload }>('user/update-profile', async (data, { rejectWithValue }) => {
+export const updateProfile = createAsyncThunk<User, {fullName: string; userName: string; bio: string; profilePic: string}, { rejectValue: ErrorPayload }>('user/update-profile', async (data, { rejectWithValue }) => {
   try {
     const response = await axios.put(`${API_URL}/api/users/update-profile`, data);
     return response.data.data;

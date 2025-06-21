@@ -5,6 +5,7 @@ import { logout,updateProfile } from '@/redux/slice/authSlice'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
 import { Loader2, LogOut } from 'lucide-react'
+import ProfilePicUploader from '../Layouts/Upload'
 
 const Profile = () => {
   const dispatch = useAppDispatch()
@@ -45,9 +46,12 @@ const Profile = () => {
         profilePic,
       }
 
+      console.log("🧠 Final Data to Submit:", data); // 👈 check her
+
       await dispatch(
         updateProfile(data)
       ).unwrap()
+      
       toast.success('Profile updated')
       setIsEditing(false)
     } catch (err) {
@@ -91,6 +95,10 @@ const Profile = () => {
             No Image
           </div>
         )}
+
+        <div className={`upload-profilepic absolute top-0 rounded-full md:w-[8vw] md:h-[8vw] w-[12vh] h-[12vh] flex items-center justify-center mx-auto overflow-hidden ${!isEditing ? 'pointer-events-none opacity-40' : ''}`}>
+          <ProfilePicUploader profilePic={profilePic} setProfilePic={setProfilePic} />
+        </div>
       </div>
 
       <form onSubmit={handleProfileUpdate} className="md:px-[1vw] px-[2vh] md:mt-[1.5vw] flex flex-col md:gap-[1.5vh]">
