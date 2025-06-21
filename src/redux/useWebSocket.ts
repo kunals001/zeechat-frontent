@@ -1,17 +1,25 @@
+// hooks/useWebSocket.ts
 "use client";
 import { useEffect, useRef } from "react";
 import { useAppDispatch } from "@/redux/hooks";
 import { receiveMessage } from "@/redux/slice/conversationSlice";
 import Cookies from "js-cookie";
 
+type WebSocketPayload = {
+  type: string;
+  payload: any;
+};
+
+// ✅ Export socketRef to use globally
+export const socketRef = { current: null as WebSocket | null };
+
 export const useWebSocket = () => {
   const ws_url = process.env.NEXT_PUBLIC_WS_URL;
   const dispatch = useAppDispatch();
-  const socketRef = useRef<WebSocket | null>(null);
-  const connectedRef = useRef(false); // ✅ useRef to persist across renders
+  const connectedRef = useRef(false);
 
   useEffect(() => {
-    if (connectedRef.current) return;
+    if (connectedRef.current || socketRef.current) return;
 
     const token = Cookies.get("token") || localStorage.getItem("token");
     if (!token) {
@@ -23,9 +31,7 @@ export const useWebSocket = () => {
     socketRef.current = ws;
     connectedRef.current = true;
 
-    ws.onopen = () => {
-      console.log("✅ WebSocket connected");
-    };
+    ws.onopen = () => console.log("✅ WebSocket connected");
 
     ws.onmessage = (e) => {
       try {
@@ -33,14 +39,15 @@ export const useWebSocket = () => {
         if (data.type === "receive_message") {
           dispatch(receiveMessage(data.payload.message));
         }
-        // Add more WebSocket event handling here if needed
+        // ✅ Add more event handling here if needed
       } catch (err) {
-        console.error("❌ WebSocket parse error:", err);
+        console.error("❌ WS parse error", err);
       }
     };
 
-    ws.onclose = (event) => {
-      console.warn("🔌 WebSocket disconnected", event.code, event.reason);
+    ws.onclose = () => {
+      console.warn("🔌 WS disconnected");
+      socketRef.current = null;
       connectedRef.current = false;
     };
 
@@ -50,7 +57,7 @@ export const useWebSocket = () => {
     };
   }, [dispatch, ws_url]);
 
-  const sendWSMessage = (payload: { type: string; payload: any }) => {
+  const sendWSMessage = (payload: WebSocketPayload) => {
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify(payload));
     } else {

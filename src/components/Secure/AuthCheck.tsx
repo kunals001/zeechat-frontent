@@ -12,6 +12,10 @@ export const AuthCheck = ({ children }: { children: React.ReactNode }) => {
     if (!isCheckingAuth && !isAuthenticated) {
       router.push("/login");
     }
+
+    if (!isCheckingAuth && isAuthenticated) {
+      router.push("/?tab=chats");
+    }
   }, [isAuthenticated, isCheckingAuth, router]);
 
   if (isCheckingAuth) {

@@ -9,14 +9,11 @@ import {
   IconUserFilled,
 } from "@tabler/icons-react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useAppSelector } from "@/redux/hooks";
 
 const NavigationBar = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const currentTab = searchParams.get("tab") || "chats";
-
-  const { user } = useAppSelector((state) => state.auth);
 
   const items = [
     {

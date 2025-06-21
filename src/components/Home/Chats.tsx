@@ -29,7 +29,7 @@ const Chats = () => {
         </div>
       </div>
 
-      <div className="px-2 md:px-0 pb-[7vh] md:pb-0 pt-[1.2vh] md:pt-0">
+      <div className="px-2 md:px-[1vw] pb-[7vh] md:pb-0 pt-[1.2vh] md:pt-0">
         <ChatList/>
       </div>
 

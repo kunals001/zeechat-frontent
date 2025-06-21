@@ -4,7 +4,7 @@ import type { Message, User, MessageType } from "../type";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// Interfaces
+// -------------------- Interfaces --------------------
 interface SendMessagePayload {
   userId: string;
   message: string;
@@ -25,11 +25,12 @@ interface ConversationState {
   selectedUser: User | null;
   isLoading: boolean;
   error: string | null;
-  typingUserIds: string[]; // users currently typing
-  onlineUsers: Record<string, boolean>; // userId -> true/false
-  lastSeenMap: Record<string, string>; // userId -> ISO string
+  typingUserIds: string[]; // userIds typing
+  onlineUsers: Record<string, boolean>;
+  lastSeenMap: Record<string, string>;
 }
 
+// -------------------- Initial State --------------------
 const initialState: ConversationState = {
   messages: [],
   selectedUser: null,
@@ -40,7 +41,7 @@ const initialState: ConversationState = {
   lastSeenMap: {},
 };
 
-// ✅ Fetch messages
+// -------------------- Async Thunks --------------------
 export const fetchMessages = createAsyncThunk<
   FetchMessagesResponse,
   string,
@@ -55,7 +56,6 @@ export const fetchMessages = createAsyncThunk<
   }
 });
 
-// ✅ Send message
 export const sendMessage = createAsyncThunk<
   Message,
   SendMessagePayload,
@@ -73,43 +73,55 @@ export const sendMessage = createAsyncThunk<
   }
 });
 
+// -------------------- Slice --------------------
 const conversationSlice = createSlice({
   name: "conversation",
   initialState,
   reducers: {
-  receiveMessage(state, action: PayloadAction<Message>) {
-    state.messages.push(action.payload);
-  },
-  selectUser(state, action: PayloadAction<User>) {
-    state.selectedUser = action.payload;
-    state.messages = [];
-  },
-  clearConversation(state) {
-    state.messages = [];
-    state.selectedUser = null;
-    state.error = null;
-    state.isLoading = false;
-  },
-  setTyping(state, action: PayloadAction<boolean>) {
-    const selectedId = state.selectedUser?._id;
-    if (!selectedId) return;
-
-    if (action.payload) {
-      if (!state.typingUserIds.includes(selectedId)) {
-        state.typingUserIds.push(selectedId);
+    receiveMessage(state, action: PayloadAction<Message>) {
+      const exists = state.messages.some((msg) => msg._id === action.payload._id);
+      if (!exists) {
+        state.messages.push(action.payload);
       }
-    } else {
-      state.typingUserIds = state.typingUserIds.filter((id) => id !== selectedId);
+    },
+
+    selectUser(state, action: PayloadAction<User>) {
+      state.selectedUser = action.payload;
+      state.messages = [];
+    },
+
+    clearConversation(state) {
+      state.messages = [];
+      state.selectedUser = null;
+      state.error = null;
+      state.isLoading = false;
+    },
+
+    setTyping(state, action: PayloadAction<{ userId: string; isTyping: boolean }>) {
+  const { userId, isTyping } = action.payload;
+
+  // ✅ Fallback to array if undefined for safety
+  if (!Array.isArray(state.typingUserIds)) {
+    state.typingUserIds = [];
+  }
+
+  if (isTyping) {
+    if (!state.typingUserIds.includes(userId)) {
+      state.typingUserIds.push(userId);
     }
-  },
-  updateOnlineStatus(state, action: PayloadAction<{ userId: string; isOnline: boolean }>) {
-    state.onlineUsers[action.payload.userId] = action.payload.isOnline;
-  },
-  updateLastSeen(state, action: PayloadAction<{ userId: string; lastSeen: string }>) {
-    state.lastSeenMap[action.payload.userId] = action.payload.lastSeen;
-  },
+  } else {
+    state.typingUserIds = state.typingUserIds.filter((id) => id !== userId);
+  }
 },
 
+    updateOnlineStatus(state, action: PayloadAction<{ userId: string; isOnline: boolean }>) {
+      state.onlineUsers[action.payload.userId] = action.payload.isOnline;
+    },
+
+    updateLastSeen(state, action: PayloadAction<{ userId: string; lastSeen: string }>) {
+      state.lastSeenMap[action.payload.userId] = action.payload.lastSeen;
+    },
+  },
 
   extraReducers: (builder) => {
     builder
@@ -125,12 +137,18 @@ const conversationSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload || "Error loading messages";
       })
+
       .addCase(sendMessage.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
       .addCase(sendMessage.fulfilled, (state, action) => {
         state.isLoading = false;
+
+        // Replace any temp message with same _id (if used in frontend)
+        state.messages = state.messages.filter((msg) => msg._id !== action.payload._id);
+
+        // Add confirmed message
         state.messages.push(action.payload);
       })
       .addCase(sendMessage.rejected, (state, action) => {
@@ -140,15 +158,14 @@ const conversationSlice = createSlice({
   },
 });
 
-// ✅ Export actions
+// -------------------- Export --------------------
 export const {
   receiveMessage,
   selectUser,
   clearConversation,
   setTyping,
   updateOnlineStatus,
-  updateLastSeen
+  updateLastSeen,
 } = conversationSlice.actions;
-
 
 export default conversationSlice.reducer;

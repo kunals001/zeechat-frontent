@@ -53,6 +53,64 @@
   }
 }
 
+/* Base background and text */
+.epr-main,
+.epr-body,
+.epr-search-container,
+.epr-search,
+.epr-category-nav,
+.epr-preview,
+.epr-emoji-category-label {
+  background-color: #0e0e0e !important;
+  color: #ffffff !important;
+}
+
+/* Header (category nav) buttons */
+.epr-category-nav button {
+  background-color: transparent !important;
+  color: #ffffff !important;
+}
+
+/* Selected category button */
+.epr-category-nav .epr-active {
+  background-color: #27272a !important;
+}
+
+/* Emoji hover */
+.epr-emoji:hover {
+  background-color: #3f3f46 !important;
+}
+
+/* Emoji groups background (grid) */
+.epr-emoji-category-content {
+  background-color: #0e0e0e !important;
+}
+
+/* Skin tone selector */
+.epr-skin-tones {
+  background-color: #1a1a1a !important;
+}
+
+/* Search bar input */
+.epr-search input {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+/* Scrollbars (WebKit) */
+.epr-body::-webkit-scrollbar {
+  width: 8px;
+}
+.epr-body::-webkit-scrollbar-thumb {
+  background-color: #333;
+  border-radius: 4px;
+}
+.epr-body::-webkit-scrollbar-track {
+  background-color: #111;
+}
+
+
 body {
   font-family: var(--font-secondary);
 }
