@@ -16,14 +16,14 @@ const FollowUser = ({ followUsers }: { followUsers: User[] }) => {
         const isSelected = selectedUser?._id === user._id;
 
         return (
+          <div key={user._id} className="relative">
           <div
-            key={user._id}
             role="button"
             tabIndex={0}
             onClick={() => dispatch(selectUser(user))}
             className={`friend w-full md:px-[1vh] flex md:gap-[.9vw] px-[1.3vh] cursor-pointer transition-all duration-100 gap-[1vh] 
-              ${isSelected ? "bg-zinc-800" : "hover:bg-zinc-800"}
-            `}
+              ${isSelected ? "md:bg-zinc-800" : "hover:bg-zinc-800"}
+             `}
           >
             {/* Image container */}
             <div className="flex items-center justify-center md:p-2 p-1">
@@ -42,7 +42,7 @@ const FollowUser = ({ followUsers }: { followUsers: User[] }) => {
               </div>
             </div>
 
-            <div className="w-full flex items-center justify-between md:py-[.5vh] border-b border-zinc-700">
+            <div className="w-full flex items-center justify-between md:py-[.5vh] md:border-b border-zinc-700">
               <div className="flex flex-col md:gap-[.4vh] gap-[.5vh]">
                 <h3 className="md:text-[.9vw] font-second text-zinc-200 text-[2vh]">
                   {user.fullName}
@@ -59,6 +59,7 @@ const FollowUser = ({ followUsers }: { followUsers: User[] }) => {
                 <ChevronDown className="text-zinc-400" />
               </div>
             </div>
+          </div>
           </div>
         );
       })}

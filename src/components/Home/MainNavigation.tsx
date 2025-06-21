@@ -7,6 +7,7 @@ import Profile from './Profile';
 import Explore from './Explore';
 import Groups from './Groups';
 import Message from './Message';
+import MobileBar from './MobileBar';
 
 const MainNavigation = () => {
 
@@ -21,10 +22,15 @@ const MainNavigation = () => {
   }, [searchParams]);
 
   return (
-    <div className='md:flex'>
+    <div className='md:flex relative'>
         <div className=''>
             <NavigationBar/>
         </div>
+
+        <div className="md:hidden w-full absolute bottom-0 ">
+          <MobileBar/>
+        </div>
+        
 
         <div className="">
           {tab === 'chats' && <Chats/>}
@@ -33,7 +39,7 @@ const MainNavigation = () => {
           {tab === 'profile' && <Profile/>}
         </div>
 
-        <div className="">
+        <div className="hidden md:block">
           <Message/>
         </div>
       </div>

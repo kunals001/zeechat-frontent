@@ -152,7 +152,7 @@ const Message = () => {
   };
 
   return (
-    <div className="md:w-[calc(100vw-54vw)] md:h-[calc(100vh-7vw)] md:rounded-r-lg text-white overflow-hidden relative hidden md:block">
+    <div className="md:w-[calc(100vw-54vw)] md:h-[calc(100vh-7vw)] md:rounded-r-lg text-white overflow-hidden relative w-full h-screen">
       {selectedUser ? (
         <div>
           <Image
@@ -160,12 +160,12 @@ const Message = () => {
             height={800}
             src="https://zeechat-kunal-singh-2025.s3.ap-south-1.amazonaws.com/uploads/theme.avif"
             alt="message theme"
-            className="w-full h-full object-cover relative"
+            className="md:w-full md:h-full w-full h-screen object-cover relative"
             priority={true}
             loading="eager"
           />
           <div className="absolute w-full h-full bg-[rgba(0,0,0,0.68)] top-0 flex flex-col">
-            <div className="w-full h-[4vw] bg-[#141414] px-[2vw] flex items-center">
+            <div className="w-full md:h-[4vw] h-[8vh] bg-[#141414] px-[2vw] flex items-center ">
               <div className="relative md:w-[3.2vw] md:h-[3.2vw] w-[6vh] h-[6vh] rounded-full overflow-hidden">
                 <Image
                   src={selectedUser.profilePic || "/default-profile.png"}
@@ -178,61 +178,61 @@ const Message = () => {
               <div className="flex justify-between md:w-[calc(100%-6vh)] items-center">
                 <div className="ml-[1vh]">
                   <h3 className="md:text-[1vw] font-second text-zinc-200 text-[2vh]">
-                    {selectedUser.fullName} | <span className="text-[.8vw] text-zinc-400">{selectedUser.userName}</span>
+                    {selectedUser.fullName} | <span className="md:text-[.8vw] text-zinc-400 text-[1.3vh]">{selectedUser.userName}</span>
                   </h3>
                   <p className="md:text-[.7vw] text-zinc-400 font-second text-[1.2vh]">
                     {isTyping ? "Typing..." : isOnline ? "Online" : lastSeen ? `Last seen ${new Date(lastSeen).toLocaleString()}` : "Offline"}
                   </p>
                 </div>
-                <div className="text-zinc-400 cursor-pointer md:p-1 hover:bg-zinc-800 md:rounded-lg">
+                <div className="text-zinc-400 cursor-pointer md:p-1 hover:bg-zinc-800 md:rounded-lg md:translate-x-0 translate-x-[15vh]">
                   <EllipsisVertical className="md:size-8 size-6" />
                 </div>
               </div>
             </div>
 
-            <div ref={chatRef} className="chat w-full h-[calc(100%-9vw)] px-[2vw] py-[1vw] overflow-y-scroll hide-scrollbar flex flex-col gap-2">
+            <div ref={chatRef} className="chat w-full md:h-[calc(100%-9vw)] px-[2vw] py-[1vw] h-[calc(100%-16vh)] overflow-y-scroll hide-scrollbar flex flex-col gap-2">
               {Object.entries(groupedMessages).map(([date, msgs]) => (
                 <div key={date}>
                   <div className="w-full flex justify-center my-4">
                     <div className="text-sm text-zinc-200 bg-zinc-700 px-3 py-1 rounded-md">{date}</div>
                   </div>
                   <div className="flex flex-col gap-2">
-  {msgs.map((msg) => {
-    const isSender = msg.sender._id === user?._id;
-    const time = new Date(msg.createdAt).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+               {msgs.map((msg) => {
+                 const isSender = msg.sender._id === user?._id;
+                 const time = new Date(msg.createdAt).toLocaleTimeString([], {
+                   hour: "2-digit",
+                   minute: "2-digit",
+                 });
 
-    return (
-      <div
-        key={msg._id}
-        className={`px-4 py-2 rounded-xl text-sm md:text-base break-words whitespace-pre-wrap ${isSender ? "self-end bg-[#8375fe] rounded-br-none" : "self-start bg-zinc-800 rounded-bl-none"}`}
-        style={{ maxWidth: "75%", width: "fit-content" }}
-      >
-        <div className="flex items-end gap-2">
-          <span>{msg.message}</span>
-          <span className="text-[0.65rem] text-zinc-200 opacity-70 whitespace-nowrap">{time}</span>
-        </div>
-      </div>
-    );
-  })}
+                 return (
+                   <div
+                     key={msg._id}
+                     className={`px-4 py-2 rounded-xl text-md md:text-base break-words whitespace-pre-wrap ${isSender ? "self-end bg-[#8375fe] rounded-br-none" : "self-start bg-zinc-800 rounded-bl-none"}`}
+                    style={{ maxWidth: "75%", width: "fit-content" }}
+                   >
+                     <div className="flex items-end gap-2">
+                       <span>{msg.message}</span>
+                       <span className="text-[0.65rem] text-zinc-200 opacity-70 whitespace-nowrap">{time}</span>
+                     </div>
+                   </div>
+                 );
+               })}
 
-  {isTyping && (
-    <div className="self-start bg-zinc-800 rounded-bl-none rounded-xl px-4 py-2 text-sm text-zinc-200 max-w-[75%] w-fit animate-pulse">
-      <div className="flex gap-1 items-center">
-        <div className="w-2 h-2 bg-zinc-300 rounded-full animate-bounce [animation-delay:.1s]" />
-        <div className="w-2 h-2 bg-zinc-300 rounded-full animate-bounce [animation-delay:.2s]" />
-        <div className="w-2 h-2 bg-zinc-300 rounded-full animate-bounce [animation-delay:.3s]" />
-      </div>
-    </div>
-  )}
-</div>
+               {isTyping && (
+                 <div className="self-start bg-zinc-800 rounded-bl-none rounded-xl px-4 py-2 text-sm text-zinc-200 max-w-[75%] w-fit animate-pulse">
+                   <div className="flex gap-1 items-center">
+                     <div className="w-2 h-2 bg-zinc-300 rounded-full animate-bounce [animation-delay:.1s]" />
+                     <div className="w-2 h-2 bg-zinc-300 rounded-full animate-bounce [animation-delay:.2s]" />
+                     <div className="w-2 h-2 bg-zinc-300 rounded-full animate-bounce [animation-delay:.3s]" />
+                   </div>
+                 </div>
+               )}
+             </div>
                 </div>
               ))}
             </div>
 
-            <div className="w-full h-[4vw] flex items-center justify-center bg-[#141414] absolute bottom-0 md:px-[1vw]">
+            <div className="w-full md:h-[4vw] h-[7.5vh] flex items-center justify-center bg-[#141414] absolute bottom-0 px-[1vh] md:px-[1vw]">
               <div className="relative flex items-center w-full">
                 <input
                   type="text"
@@ -240,10 +240,10 @@ const Message = () => {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                  className="w-full md:h-[3vw] bg-zinc-800 text-zinc-200 placeholder:text-zinc-500 md:px-[4vw] px-[1vh] py-[1vh] rounded-lg outline-none"
+                  className="w-full md:h-[3vw] bg-zinc-800 text-zinc-200 placeholder:text-zinc-500 md:px-[4vw] px-[1vh] md:py-[1vh] py-[1.2vh] rounded-lg outline-none"
                 />
-                <IconSend2 onClick={handleSendMessage} className="text-zinc-500 md:size-8 absolute md:right-5 right-8 cursor-pointer" />
-                <IconMoodEdit className="text-zinc-400 md:size-8 absolute md:left-5 right-16 cursor-pointer" />
+                <IconSend2 onClick={handleSendMessage} className="text-zinc-500 md:size-8 absolute md:right-5 right-4 cursor-pointer" />
+                <IconMoodEdit className="text-zinc-400 md:size-8 absolute md:left-5 right-14 cursor-pointer" />
               </div>
             </div>
           </div>
