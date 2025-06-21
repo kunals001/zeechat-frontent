@@ -66,14 +66,14 @@ const NavigationBar = () => {
       </div>
 
       <div className="items-center justify-center hidden md:flex">
-        <Link href="/?tab=profile">
+        <Link href="/?tab=profile" className="p-1.5 rounded-full transition-all duration-300 hover:bg-zinc-800">
           {typeof user?.profilePic === "string" && user.profilePic.trim() !== "" ? (
           <Image
               width={100}
               height={100}
               src={user.profilePic}
               alt="user profile"
-              className="md:w-[2.5vw] md:h-[2.5vw] w-[4vh] h-[4vh] rounded-full object-cover border-2 border-prime cursor-pointer"
+              className="md:w-[2.1vw] md:h-[2.1vw] rounded-full object-cover border-2 border-zinc-800 cursor-pointer"
             />
           ) : null}
         </Link>

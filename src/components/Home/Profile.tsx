@@ -59,26 +59,26 @@ const Profile = () => {
     }
   }
 
-  const handleLogout = async () => {
-    try {
-      await dispatch(logout()).unwrap()
-      toast.success('Logout successful')
-    } catch (err) {
-      console.log(err)
+  // const handleLogout = async () => {
+  //   try {
+  //     await dispatch(logout()).unwrap()
+  //     toast.success('Logout successful')
+  //   } catch (err) {
+  //     console.log(err)
       
-    }
-  }
+  //   }
+  // }
 
   return (
     <div className='md:w-[30vw] md:h-[calc(100vh-7vw)] text-white bg-[#181818f5] w-full h-[calc(100vh-6vh)] overflow-y-scroll hide-scrollbar border-r border-zinc-800'>
       <div className="w-full md:p-[1vw] p-[2vh] text-zinc-200 flex items-center justify-between">
-        <h2 className='md:text-[1.5vw] text-[3vh] font-second font-semibold select-none'>Profile</h2>
-        <button
+        <h2 className='md:text-[1.5vw] text-[3vh] font-second font-[500] select-none'>Profile</h2>
+        {/* <button
           onClick={handleLogout}
           className='md:text-[1vw] text-zinc-100 md:px-[1vh] md:py-[.4vh] px-[1vh] py-[.5vh] rounded-md md:rounded-lg bg-red-400 cursor-pointer font-semibold disabled:opacity-50 flex gap-1 items-center'
         >
           Logout <LogOut className='md:size-4 size-4' />
-        </button>
+        </button> */}
       </div>
 
       <div className="relative rounded-full md:w-[8vw] md:h-[8vw] w-[12vh] h-[12vh] flex items-center justify-center mx-auto overflow-hidden">
