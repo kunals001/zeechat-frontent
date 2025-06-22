@@ -1,5 +1,5 @@
 import React from 'react'
-import PanelButton from '../Layouts/PanelButton'
+import PanelButton from '../../Layouts/PanelButton'
 import { BrushCleaning, CircleX } from 'lucide-react';
 import { IconStar,IconInfoSquareRounded, IconBellOff,IconPin, IconTrash } from '@tabler/icons-react';
 

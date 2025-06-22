@@ -46,4 +46,9 @@ export interface Message {
   message: string;
   type: MessageType;
   createdAt: string;
+
+  reactions?: {
+    userId: string;
+    emoji: string;
+  }[]
 }

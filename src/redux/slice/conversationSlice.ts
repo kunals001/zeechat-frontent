@@ -73,6 +73,34 @@ export const sendMessage = createAsyncThunk<
   }
 });
 
+
+export const addReactionToMessageAsync = createAsyncThunk<
+  { messageId: string; emoji: string; userId: string },
+  { messageId: string; emoji: string },
+  { rejectValue: string }
+>("conversation/addReactionToMessage", async ({ messageId, emoji }, { rejectWithValue, getState }) => {
+  try {
+    await axios.post(`${API_URL}/api/messages/react`, { messageId, emoji });
+    const userId = (getState() as any).auth.user._id;
+    return { messageId, emoji, userId };
+  } catch (error) {
+    const err = error as AxiosError<{ message: string }>;
+    return rejectWithValue(err.response?.data?.message || "Failed to react");
+  }
+});
+
+export const fetchConversationUsers = createAsyncThunk(
+  "conversation/fetchConversationUsers",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await axios.get(`${API_URL}/api/messages/last`);
+      return res.data.conversations;
+    } catch (err) {
+      return rejectWithValue("Failed to load chats");
+    }
+  }
+);
+
 // -------------------- Slice --------------------
 const conversationSlice = createSlice({
   name: "conversation",
@@ -98,21 +126,40 @@ const conversationSlice = createSlice({
     },
 
     setTyping(state, action: PayloadAction<{ userId: string; isTyping: boolean }>) {
-  const { userId, isTyping } = action.payload;
+      const { userId, isTyping } = action.payload;
 
-  // ✅ Fallback to array if undefined for safety
-  if (!Array.isArray(state.typingUserIds)) {
-    state.typingUserIds = [];
-  }
+      // ✅ Fallback to array if undefined for safety
+      if (!Array.isArray(state.typingUserIds)) {
+        state.typingUserIds = [];
+      }
 
-  if (isTyping) {
-    if (!state.typingUserIds.includes(userId)) {
-      state.typingUserIds.push(userId);
-    }
-  } else {
-    state.typingUserIds = state.typingUserIds.filter((id) => id !== userId);
-  }
-},
+      if (isTyping) {
+        if (!state.typingUserIds.includes(userId)) {
+          state.typingUserIds.push(userId);
+        }
+      } else {
+        state.typingUserIds = state.typingUserIds.filter((id) => id !== userId);
+      }
+      },        addReactionToMessage(
+      state,
+      action: PayloadAction<{ messageId: string; emoji: string; userId: string }>
+    ) {
+      const { messageId, emoji, userId } = action.payload;
+      const msg = state.messages.find((m) => m._id === messageId);
+
+      if (msg) {
+        if (!msg.reactions) msg.reactions = [];
+        const existing = msg.reactions.find((r) => r.userId === userId);
+    
+        if (existing?.emoji === emoji) {
+          // same emoji → remove
+          msg.reactions = msg.reactions.filter((r) => r.userId !== userId);
+        } else {
+          msg.reactions = msg.reactions.filter((r) => r.userId !== userId);
+          msg.reactions.push({ emoji, userId });
+        }
+      }
+    },
 
     updateOnlineStatus(state, action: PayloadAction<{ userId: string; isOnline: boolean }>) {
       state.onlineUsers[action.payload.userId] = action.payload.isOnline;
@@ -154,7 +201,30 @@ const conversationSlice = createSlice({
       .addCase(sendMessage.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload || "Error sending message";
-      });
+      })
+      .addCase(addReactionToMessageAsync.fulfilled, (state, action) => {
+      const { messageId, emoji, userId } = action.payload;
+      const msg = state.messages.find((m) => m._id === messageId);
+      if (!msg) return;
+
+      const existingReaction = msg.reactions?.find(
+        (r) => r.userId === userId
+      );
+
+      if (!msg.reactions) {
+        msg.reactions = [];
+      }
+
+      // If user clicked the same emoji again -> remove it
+      if (existingReaction?.emoji === emoji) {
+        msg.reactions = msg.reactions.filter((r) => r.userId !== userId);
+      } else {
+        // Remove any existing reaction by user
+        msg.reactions = msg.reactions.filter((r) => r.userId !== userId);
+        // Add new reaction
+        msg.reactions.push({ emoji, userId });
+      }
+      })
   },
 });
 
@@ -166,6 +236,7 @@ export const {
   setTyping,
   updateOnlineStatus,
   updateLastSeen,
+  addReactionToMessage
 } = conversationSlice.actions;
 
 export default conversationSlice.reducer;

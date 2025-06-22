@@ -41,7 +41,7 @@ useEffect(() => {
 }, [onClose]);
 
 // 👇 ReactionBox: Close emoji picker popup on outside click
-useEffect(() => {
+  useEffect(() => {
   if (!showEmojiPicker) return;
 
   const handleClickOutside = (e: MouseEvent) => {

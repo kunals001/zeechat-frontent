@@ -2,7 +2,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { useAppDispatch } from "@/redux/hooks";
-import { receiveMessage } from "@/redux/slice/conversationSlice";
+import { receiveMessage,addReactionToMessage, } from "@/redux/slice/conversationSlice";
 import Cookies from "js-cookie";
 
 type WebSocketPayload = {
@@ -39,7 +39,16 @@ export const useWebSocket = () => {
         if (data.type === "receive_message") {
           dispatch(receiveMessage(data.payload.message));
         }
-        // ✅ Add more event handling here if needed
+        
+        
+        if (data.type === "message_reacted") {
+          dispatch(addReactionToMessage(data.payload));
+        }
+
+        // ✅ ADD THIS if your backend emits `reaction_update`
+        if (data.type === "reaction_update") {
+          dispatch(addReactionToMessage(data.payload));
+        }
       } catch (err) {
         console.error("❌ WS parse error", err);
       }
