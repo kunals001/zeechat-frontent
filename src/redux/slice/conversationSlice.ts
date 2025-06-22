@@ -9,6 +9,8 @@ interface SendMessagePayload {
   userId: string;
   message: string;
   type: MessageType;
+  mediaUrl?: string;
+  caption?: string;
 }
 
 interface SendMessageResponse {
@@ -60,18 +62,22 @@ export const sendMessage = createAsyncThunk<
   Message,
   SendMessagePayload,
   { rejectValue: string }
->("conversation/sendMessage", async ({ userId, message, type }, { rejectWithValue }) => {
-  try {
-    const res = await axios.post<SendMessageResponse>(
-      `${API_URL}/api/messages/send/${userId}`,
-      { message, type }
-    );
-    return res.data.message;
-  } catch (error) {
-    const err = error as AxiosError<{ message: string }>;
-    return rejectWithValue(err.response?.data?.message || "Failed to send message");
+>(
+  "conversation/sendMessage",
+  async ({ userId, message, type, caption, mediaUrl }, { rejectWithValue }) => {
+    try {
+      const res = await axios.post<SendMessageResponse>(
+        `${API_URL}/api/messages/send/${userId}`,
+        { message, type, caption, mediaUrl } // ✅ Send caption to backend
+      );
+      return res.data.message;
+    } catch (error) {
+      const err = error as AxiosError<{ message: string }>;
+      return rejectWithValue(err.response?.data?.message || "Failed to send message");
+    }
   }
-});
+);
+
 
 
 export const addReactionToMessageAsync = createAsyncThunk<
@@ -89,17 +95,6 @@ export const addReactionToMessageAsync = createAsyncThunk<
   }
 });
 
-export const fetchConversationUsers = createAsyncThunk(
-  "conversation/fetchConversationUsers",
-  async (_, { rejectWithValue }) => {
-    try {
-      const res = await axios.get(`${API_URL}/api/messages/last`);
-      return res.data.conversations;
-    } catch (err) {
-      return rejectWithValue("Failed to load chats");
-    }
-  }
-);
 
 // -------------------- Slice --------------------
 const conversationSlice = createSlice({

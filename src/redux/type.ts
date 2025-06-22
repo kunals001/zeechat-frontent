@@ -31,6 +31,7 @@ export type MessageType = "text" | "image" | "video" | "file";
 
 export interface Message {
   _id: string;
+  mediaUrl?: string;
   sender: {
     _id: string;
     fullName: string;
