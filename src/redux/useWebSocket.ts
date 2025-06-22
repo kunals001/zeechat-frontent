@@ -49,6 +49,14 @@ export const useWebSocket = () => {
         if (data.type === "reaction_update") {
           dispatch(addReactionToMessage(data.payload));
         }
+
+        // ✅ ADD THIS FOR DELETE
+        if (data.type === "message_deleted") {
+          dispatch({
+            type: "conversation/messageDeleted",
+            payload: data.payload,
+          });
+        }
       } catch (err) {
         console.error("❌ WS parse error", err);
       }
@@ -59,6 +67,7 @@ export const useWebSocket = () => {
       socketRef.current = null;
       connectedRef.current = false;
     };
+
 
     return () => {
       ws.close();

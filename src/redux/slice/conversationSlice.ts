@@ -96,6 +96,22 @@ export const addReactionToMessageAsync = createAsyncThunk<
 });
 
 
+// ---------------- Delete Message ----------------
+export const deleteMessageAsync = createAsyncThunk<
+  { messageId: string; type: "for_me" | "for_everyone" },
+  { messageId: string; type: "for_me" | "for_everyone" },
+  { rejectValue: string }
+>("conversation/deleteMessage", async ({ messageId, type }, { rejectWithValue }) => {
+  try {
+    await axios.delete(`${API_URL}/api/message/${messageId}?type=${type}`);
+    return { messageId, type };
+  } catch (error) {
+    const err = error as AxiosError<{ message: string }>;
+    return rejectWithValue(err.response?.data?.message || "Failed to delete message");
+  }
+});
+
+
 // -------------------- Slice --------------------
 const conversationSlice = createSlice({
   name: "conversation",
@@ -163,6 +179,22 @@ const conversationSlice = createSlice({
     updateLastSeen(state, action: PayloadAction<{ userId: string; lastSeen: string }>) {
       state.lastSeenMap[action.payload.userId] = action.payload.lastSeen;
     },
+
+    messageDeleted(state, action: PayloadAction<{ messageId: string; userId: string; deleteType: "me" | "everyone" }>) {
+      const { messageId, userId, deleteType } = action.payload;
+      const msg = state.messages.find((m) => m._id === messageId);
+      if (!msg) return;
+
+      if (deleteType === "me") {
+        if (!msg.deletedFor) msg.deletedFor = [];
+        msg.deletedFor.push(userId);
+      } else if (deleteType === "everyone") {
+        msg.message = "This message was deleted.";
+        msg.type = "text";
+        msg.reactions = [];
+      }
+    }
+
   },
 
   extraReducers: (builder) => {
@@ -220,6 +252,23 @@ const conversationSlice = createSlice({
         msg.reactions.push({ emoji, userId });
       }
       })
+      .addCase(deleteMessageAsync.fulfilled, (state, action) => {
+        const { messageId, type } = action.payload;
+
+        if (type === "for_everyone") {
+         // Remove the message entirely
+          state.messages = state.messages.filter((m) => m._id !== messageId);
+        }
+
+        if (type === "for_me") {
+          const msg = state.messages.find((m) => m._id === messageId);
+          if (msg) {
+            if (!msg.      deletedFor) msg.deletedFor = [];
+            msg.deletedFor.push("me"); // "me" just a placeholder; real filtering       logic will be in frontend
+          }
+        }
+      });
+
   },
 });
 

@@ -47,6 +47,8 @@ export interface Message {
   message: string;
   type: MessageType;
   createdAt: string;
+  deletedFor?: string[];
+  isDeleted?: boolean; 
 
   reactions?: {
     userId: string;

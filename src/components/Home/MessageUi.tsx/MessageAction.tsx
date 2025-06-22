@@ -28,9 +28,6 @@ interface MessageBubbleProps {
   chatRef: React.RefObject<HTMLDivElement>;
 }
 
-/**
- * MessageBubble component - Handles rendering and interactions for individual chat messages
- */
 const MessageBubble: React.FC<MessageBubbleProps> = ({
   msg,
   isSender,
@@ -43,46 +40,44 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   const { selectedUser } = useAppSelector((state) => state.conversation);
   const { user } = useAppSelector((state) => state.auth);
 
-  // Refs for DOM elements
   const actionRef = useRef<HTMLDivElement>(null);
   const iconRef = useRef<HTMLDivElement>(null);
   const emojiIconRef = useRef<HTMLDivElement>(null);
   const reactRef = useRef<HTMLDivElement>(null);
 
-  // State management
   const [showAbove, setShowAbove] = useState(false);
   const [showReactBox, setShowReactBox] = useState<string | null>(null);
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [deleteType, setDeleteType] = useState<"me" | "everyone">("me");
 
-  // Calculate if actions menu should show above or below
   useEffect(() => {
     if (showActions !== msg._id || !iconRef.current || !chatRef.current) return;
-    
     const iconRect = iconRef.current.getBoundingClientRect();
     const chatRect = chatRef.current.getBoundingClientRect();
     const estimatedHeight = 160;
     const spaceBelow = chatRect.bottom - iconRect.bottom;
     const spaceAbove = iconRect.top - chatRect.top;
-    
     setShowAbove(spaceBelow < estimatedHeight && spaceAbove > estimatedHeight);
   }, [showActions, msg._id, chatRef]);
 
-  // Close actions menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        showActions === msg._id &&
-        !actionRef.current?.contains(e.target as Node) &&
-        !iconRef.current?.contains(e.target as Node)
-      ) {
+useEffect(() => {
+  const handleClickOutside = (e: MouseEvent) => {
+    if (
+      showActions === msg._id &&
+      !actionRef.current?.contains(e.target as Node) &&
+      !iconRef.current?.contains(e.target as Node)
+    ) {
+      // ✅ prevent closing action if delete popup is open
+      if (!showDeletePopup) {
         setShowActions(null);
       }
-    };
+    }
+  };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showActions, msg._id, setShowActions]);
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => document.removeEventListener("mousedown", handleClickOutside);
+}, [showActions, msg._id, setShowActions, showDeletePopup]);
 
-  // Close reaction box when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -92,19 +87,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         setShowReactBox(null);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showReactBox, msg._id]);
 
-  /**
-   * Handles adding/updating a reaction to a message
-   * @param emoji - The emoji to react with
-   */
   const handleEmojiReact = (emoji: string) => {
     if (!user) return;
 
-    // Update in Redux store
     dispatch(
       addReactionToMessageAsync({
         messageId: msg._id,
@@ -112,7 +101,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       })
     );
 
-    // Send real-time update via WebSocket
     if (selectedUser?._id) {
       socketRef.current?.send(
         JSON.stringify({
@@ -127,15 +115,22 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     }
   };
 
-  // Action menu items configuration
   const actionItems = [
     { icon: <Forward size={16} />, label: "Forward" },
-    { icon: <Trash size={16} />, label: "Delete" },
+    {
+      icon: <Trash size={16} />,
+      label: "Delete",
+      onClick: () => {
+        setShowDeletePopup(true);
+        setShowActions(null);
+      },
+    },
     { icon: <Copy size={16} />, label: "Copy" },
     {
       icon: <IconMoodSmile size={16} />,
       label: "React",
       onClick: () => {
+        setShowActions(null);
         setShowActions(null);
         setShowReactBox(msg._id);
       },
@@ -151,9 +146,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         marginBottom: msg.reactions?.length ? "1.5rem" : undefined,
       }}
     >
-      {/* Message Content Container */}
       <div
-        className={`relative  rounded-xl text-md md:text-base break-words whitespace-pre-wrap ${
+        className={`relative rounded-xl text-md md:text-base break-words whitespace-pre-wrap ${
           isSender ? "bg-[#7667ff] rounded-br-none" : "bg-zinc-800 rounded-bl-none"
         } ${msg.type === "image" || msg.type === "video" ? "p-2" : "px-4 py-2"}`}
         style={{
@@ -163,7 +157,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         }}
       >
         <div className="flex items-end gap-2 relative">
-          {/* Text Message */}
           {msg.type === "text" && (
             <>
               <span>{msg.message}</span>
@@ -173,7 +166,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             </>
           )}
 
-          {/* Image Message */}
           {msg.type === "image" && (
             <div className="flex flex-col">
               <img
@@ -182,9 +174,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                 className="max-w-[300px] rounded-lg object-cover"
               />
               {msg.caption && (
-                <span className="text-md text-zinc-100 mt-1 break-words">
-                  {msg.caption}
-                </span>
+                <span className="text-md text-zinc-100 mt-1 break-words">{msg.caption}</span>
               )}
               <span className="text-[0.65rem] text-zinc-100 opacity-70 mt-1 self-end select-none">
                 {time}
@@ -192,7 +182,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             </div>
           )}
 
-          {/* Video Message */}
           {msg.type === "video" && (
             <div className="flex flex-col">
               <video
@@ -201,9 +190,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                 className="max-w-[300px] rounded-lg"
               />
               {msg.caption && (
-                <span className="text-md text-zinc-100 mt-1 break-words">
-                  {msg.caption}
-                </span>
+                <span className="text-md text-zinc-100 mt-1 break-words">{msg.caption}</span>
               )}
               <span className="text-[0.65rem] text-zinc-100 opacity-70 mt-1 self-end select-none">
                 {time}
@@ -211,7 +198,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             </div>
           )}
 
-          {/* Action Menu Trigger */}
           <div 
             ref={iconRef} 
             className={`absolute bottom-0 cursor-pointer z-60 ${
@@ -255,7 +241,63 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           </div>
         </div>
 
-        {/* Message Reactions */}
+
+        {showDeletePopup && (
+  <div className="fixed inset-0 z-[999] flex items-center justify-center backdrop-blur-sm bg-black/40">
+    <div className="bg-zinc-900 border border-zinc-700 p-6 rounded-xl shadow-2xl w-[90%] max-w-md">
+      <div className="text-white font-semibold text-lg mb-4">Delete Message</div>
+
+      <div className="flex flex-col gap-3 mb-6">
+        <label className="flex items-center gap-2 text-zinc-300 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={deleteType === "me"}
+            onChange={() => setDeleteType("me")}
+          />
+          Delete for me
+        </label>
+
+        <label className="flex items-center gap-2 text-zinc-300 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={deleteType === "everyone"}
+            onChange={() => setDeleteType("everyone")}
+          />
+          Delete for everyone
+        </label>
+      </div>
+
+      <div className="flex justify-end gap-2">
+        <button
+          onClick={() => setShowDeletePopup(false)}
+          className="px-4 py-2 text-sm bg-zinc-700 text-white rounded"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => {
+            socketRef.current?.send(
+              JSON.stringify({
+                type: "delete_message",
+                payload: {
+                  messageId: msg._id,
+                  to: selectedUser?._id,
+                  deleteType,
+                },
+              })
+            );
+            setShowDeletePopup(false);
+          }}
+          className="px-4 py-2 text-sm bg-red-600 text-white rounded"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
         {msg.reactions && msg.reactions.length > 0 && (
           <div
             className={`absolute -bottom-3 ${
@@ -263,10 +305,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             } flex gap-1 bg-zinc-700 border border-zinc-600 px-2 py-[2px] rounded-full shadow-sm`}
           >
             {msg.reactions.map((reaction, index) => (
-              <span
-                key={index}
-                className="text-white text-sm select-none leading-none"
-              >
+              <span key={index} className="text-white text-sm select-none leading-none">
                 {reaction.emoji}
               </span>
             ))}
@@ -274,7 +313,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         )}
       </div>
 
-      {/* Emoji Reaction Button (for received messages) */}
       {!isSender && (
         <div ref={emojiIconRef} className="hidden md:block cursor-pointer relative">
           <IconMoodSmile
@@ -283,8 +321,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             }`}
             onClick={() => setShowReactBox((prev) => (prev === msg._id ? null : msg._id))}
           />
-          
-          {/* Reaction Picker */}
           {showReactBox === msg._id && (
             <div ref={reactRef}>
               <ReactionBox
