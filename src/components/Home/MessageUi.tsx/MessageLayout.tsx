@@ -12,11 +12,11 @@ import {
   updateOnlineStatus,
   updateLastSeen,
 } from "@/redux/slice/conversationSlice";
-import NoChatSelected from "../NoChatSelected";
+import NoChatSelected from "../ChatUi.tsx/NoChatSelected";
 import { socketRef } from "@/redux/useWebSocket";
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
-import Panel from "../Panel";
+import Panel from "./Panel";
 import MessageBubble from "./MessageAction";
 
 

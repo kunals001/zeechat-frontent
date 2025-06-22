@@ -5,7 +5,7 @@ import { logout,updateProfile } from '@/redux/slice/authSlice'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
 import { Loader2, LogOut } from 'lucide-react'
-import ProfilePicUploader from '../Layouts/Upload'
+import ProfilePicUploader from '../../Layouts/Upload'
 
 const Profile = () => {
   const dispatch = useAppDispatch()

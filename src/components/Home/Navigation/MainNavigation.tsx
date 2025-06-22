@@ -2,11 +2,11 @@
 import { useEffect, useState } from 'react';
 import {useSearchParams } from 'next/navigation';
 import NavigationBar from './NavigationBar';
-import Chats from './MessageUi.tsx/Chats';
-import Profile from './Profile';
-import Explore from './Explore';
-import Groups from './Groups';
-import Message from './MessageUi.tsx/Message';
+import Chats from '../ChatUi.tsx/Chats';
+import Profile from '../User/Profile';
+import Explore from '../Explore/Explore';
+import Groups from '../Group/Groups';
+import Message from '../MessageUi.tsx/MessageLayout';
 import MobileBar from './MobileBar';
 
 const MainNavigation = () => {

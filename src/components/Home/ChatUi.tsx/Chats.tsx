@@ -5,7 +5,7 @@ import { Search } from 'lucide-react';
 import "@/app/globals.css"
 import ChatList from './ChatList';
 import { useAppSelector } from '@/redux/hooks';
-import Message from './Message';
+import Message from '../MessageUi.tsx/MessageLayout';
 
 const Chats = () => {
 

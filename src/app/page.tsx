@@ -1,5 +1,5 @@
 "use client"
-import MainNavigation from '@/components/Home/MainNavigation'
+import MainNavigation from '@/components/Home/Navigation/MainNavigation'
 import Navbar from '@/components/Navbar/Navbar'
 import React from 'react'
 import { AuthCheck } from '@/components/Secure/AuthCheck'
