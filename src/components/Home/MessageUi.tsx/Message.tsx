@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { IconSend2, IconMoodEdit, IconMoodSmile } from "@tabler/icons-react";
+import { IconSend2, IconMoodEdit,} from "@tabler/icons-react";
 import { EllipsisVertical,Plus } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
@@ -12,11 +12,12 @@ import {
   updateOnlineStatus,
   updateLastSeen,
 } from "@/redux/slice/conversationSlice";
-import NoChatSelected from "./NoChatSelected";
+import NoChatSelected from "../NoChatSelected";
 import { socketRef } from "@/redux/useWebSocket";
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
-import Panel from "./Panel";
+import Panel from "../Panel";
+import MessageBubble from "./MessageAction";
 
 
 function formatChatDate(dateStr: string): string {
@@ -42,6 +43,7 @@ const Message = () => {
 
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showActions, setShowActions] = useState<string | null>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -314,24 +316,15 @@ const Message = () => {
                         minute: "2-digit",
                       });
                       return (
-                        <div
-                          key={`${msg._id}-${index}`}
-                          className={`relative leading-tight px-4 py-2 rounded-xl text-md md:text-base break-words whitespace-pre-wrap ${isSender ? "self-end bg-[#8375fe] rounded-br-none" : "self-start bg-zinc-800 rounded-bl-none"} group`}
-                          style={{ maxWidth: "75%", width: "fit-content" }}
-                        >
-                          {/* Emoji Reaction Icon (appears on hover) */}
-                          <div className={`absolute top-1/2 -translate-y-1/2 ${isSender ? "-left-7" : "-right-7"} hidden group-hover:flex items-center justify-center cursor-pointer transition-all ease-in duration-300`}>
-                            <button className="text-xl hover:scale-110  cursor-pointer">
-                             <IconMoodSmile/>
-                            </button>
-                          </div>
-
-                          {/* Message Content */}
-                          <div className="flex items-end gap-2">
-                            <span>{msg.message}</span>
-                            <span className="text-[0.65rem] text-zinc-200 opacity-70 whitespace-nowrap select-none">{time}</span>
-                          </div>
-                        </div>
+                        <MessageBubble
+                          chatRef={chatRef}
+                          key={msg._id}
+                          msg={msg}
+                          isSender={isSender}
+                          time={time}
+                          showActions={showActions}
+                          setShowActions={setShowActions}
+                        />
                       );
                     })}
 
