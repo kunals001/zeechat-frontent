@@ -103,13 +103,14 @@ export const deleteMessageAsync = createAsyncThunk<
   { rejectValue: string }
 >("conversation/deleteMessage", async ({ messageId, type }, { rejectWithValue }) => {
   try {
-    await axios.delete(`${API_URL}/api/message/${messageId}?type=${type}`);
+    await axios.delete(`${API_URL}/api/messages/message/${messageId}?type=${type}`);
     return { messageId, type };
   } catch (error) {
     const err = error as AxiosError<{ message: string }>;
     return rejectWithValue(err.response?.data?.message || "Failed to delete message");
   }
 });
+
 
 
 // -------------------- Slice --------------------
@@ -180,20 +181,26 @@ const conversationSlice = createSlice({
       state.lastSeenMap[action.payload.userId] = action.payload.lastSeen;
     },
 
-    messageDeleted(state, action: PayloadAction<{ messageId: string; userId: string; deleteType: "me" | "everyone" }>) {
-      const { messageId, userId, deleteType } = action.payload;
-      const msg = state.messages.find((m) => m._id === messageId);
-      if (!msg) return;
+messageDeleted: (
+  state,
+  action: PayloadAction<{ messageId: string; deleteType: "me" | "everyone"; userId: string }>
+) => {
+  const { messageId, deleteType, userId } = action.payload;
+  const msg = state.messages.find((m) => m._id === messageId);
+  if (!msg) return;
 
-      if (deleteType === "me") {
-        if (!msg.deletedFor) msg.deletedFor = [];
-        msg.deletedFor.push(userId);
-      } else if (deleteType === "everyone") {
-        msg.message = "This message was deleted.";
-        msg.type = "text";
-        msg.reactions = [];
-      }
+  if (deleteType === "me") {
+    if (!msg.deletedFor) msg.deletedFor = [];
+    if (!msg.deletedFor.includes(userId)) {
+      msg.deletedFor.push(userId);
     }
+  } else if (deleteType === "everyone") {
+    msg.message = "This message was deleted.";
+    msg.type = "text";
+    msg.reactions = [];
+  }
+}
+
 
   },
 
@@ -252,6 +259,7 @@ const conversationSlice = createSlice({
         msg.reactions.push({ emoji, userId });
       }
       })
+      
       .addCase(deleteMessageAsync.fulfilled, (state, action) => {
         const { messageId, type } = action.payload;
 
@@ -280,7 +288,8 @@ export const {
   setTyping,
   updateOnlineStatus,
   updateLastSeen,
-  addReactionToMessage
+  addReactionToMessage,
+  messageDeleted
 } = conversationSlice.actions;
 
 export default conversationSlice.reducer;

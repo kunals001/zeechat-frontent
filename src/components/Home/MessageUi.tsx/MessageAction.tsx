@@ -4,7 +4,7 @@ import { ChevronDown, Forward, Trash, Copy } from "lucide-react";
 import { IconMoodSmile } from "@tabler/icons-react";
 import ReactionBox from "./MessageReaction";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { addReactionToMessageAsync } from "@/redux/slice/conversationSlice";
+import { addReactionToMessageAsync, deleteMessageAsync } from "@/redux/slice/conversationSlice";
 import { socketRef } from "@/redux/useWebSocket";
 import type { MessageType } from '@/redux/type';
 import Image from "next/image";
@@ -17,6 +17,8 @@ interface Message {
   createdAt: string;
   reactions?: { emoji: string; userId: string }[];
   type: MessageType;
+  deletedFor?: string[];
+  isDeleted?: boolean;
 }
 
 interface MessageBubbleProps {
@@ -25,7 +27,7 @@ interface MessageBubbleProps {
   time: string;
   showActions: string | null;
   setShowActions: React.Dispatch<React.SetStateAction<string | null>>;
-  chatRef: React.RefObject<HTMLDivElement>;
+  chatRef: React.RefObject<HTMLDivElement | null>;
 }
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({
@@ -50,6 +52,10 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [deleteType, setDeleteType] = useState<"me" | "everyone">("me");
 
+  // ✅ Flag to check if message was deleted for UI
+  const isDeleted = msg.message === "This message was deleted.";
+
+  // ✅ Calculate placement for action menu
   useEffect(() => {
     if (showActions !== msg._id || !iconRef.current || !chatRef.current) return;
     const iconRect = iconRef.current.getBoundingClientRect();
@@ -60,24 +66,23 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     setShowAbove(spaceBelow < estimatedHeight && spaceAbove > estimatedHeight);
   }, [showActions, msg._id, chatRef]);
 
-useEffect(() => {
-  const handleClickOutside = (e: MouseEvent) => {
-    if (
-      showActions === msg._id &&
-      !actionRef.current?.contains(e.target as Node) &&
-      !iconRef.current?.contains(e.target as Node)
-    ) {
-      // ✅ prevent closing action if delete popup is open
-      if (!showDeletePopup) {
+  // ✅ Hide actions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        showActions === msg._id &&
+        !actionRef.current?.contains(e.target as Node) &&
+        !iconRef.current?.contains(e.target as Node) &&
+        !showDeletePopup
+      ) {
         setShowActions(null);
       }
-    }
-  };
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showActions, msg._id, showDeletePopup]);
 
-  document.addEventListener("mousedown", handleClickOutside);
-  return () => document.removeEventListener("mousedown", handleClickOutside);
-}, [showActions, msg._id, setShowActions, showDeletePopup]);
-
+  // ✅ Hide reaction box when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -91,16 +96,10 @@ useEffect(() => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showReactBox, msg._id]);
 
+  // ✅ Emoji reaction handler
   const handleEmojiReact = (emoji: string) => {
     if (!user) return;
-
-    dispatch(
-      addReactionToMessageAsync({
-        messageId: msg._id,
-        emoji,
-      })
-    );
-
+    dispatch(addReactionToMessageAsync({ messageId: msg._id, emoji }));
     if (selectedUser?._id) {
       socketRef.current?.send(
         JSON.stringify({
@@ -115,24 +114,24 @@ useEffect(() => {
     }
   };
 
+  // ✅ Actions in dropdown
   const actionItems = [
-    { icon: <Forward size={16} />, label: "Forward" },
+    { icon: <Forward className="md:size-5" />, label: "Forward" },
     {
-      icon: <Trash size={16} />,
+      icon: <IconMoodSmile className="md:size-5" />,
+      label: "React",
+      onClick: () => {
+        setShowActions(null);
+        setShowReactBox(msg._id);
+      },
+    },
+    { icon: <Copy className="md:size-5" />, label: "Copy" },
+    {
+      icon: <Trash className="md:size-5" />,
       label: "Delete",
       onClick: () => {
         setShowDeletePopup(true);
         setShowActions(null);
-      },
-    },
-    { icon: <Copy size={16} />, label: "Copy" },
-    {
-      icon: <IconMoodSmile size={16} />,
-      label: "React",
-      onClick: () => {
-        setShowActions(null);
-        setShowActions(null);
-        setShowReactBox(msg._id);
       },
     },
   ];
@@ -150,28 +149,37 @@ useEffect(() => {
         className={`relative rounded-xl text-md md:text-base break-words whitespace-pre-wrap ${
           isSender ? "bg-[#7667ff] rounded-br-none" : "bg-zinc-800 rounded-bl-none"
         } ${msg.type === "image" || msg.type === "video" ? "p-2" : "px-4 py-2"}`}
-        style={{
-          maxWidth: "75%",
-          width: "fit-content",
-          overflow: "visible",
-        }}
+        style={{ maxWidth: "75%", width: "fit-content", overflow: "visible" }}
       >
         <div className="flex items-end gap-2 relative">
+          {/* ✅ TEXT MESSAGE (Handle deleted) */}
           {msg.type === "text" && (
             <>
-              <span>{msg.message}</span>
+              {isDeleted ? (
+                <span className="text-md text-zinc-100 break-words">
+                  This message was deleted.
+                </span>
+              ) : (
+                <span className="text-md text-zinc-100 break-words">
+                  {msg.message}
+                </span>
+              )}
               <span className="text-[0.65rem] text-zinc-100 opacity-80 whitespace-nowrap select-none">
                 {time}
               </span>
             </>
           )}
 
+          {/* ✅ IMAGE MESSAGE */}
           {msg.type === "image" && (
             <div className="flex flex-col">
-              <img
+              <Image
                 src={msg.message}
                 alt="sent"
                 className="max-w-[300px] rounded-lg object-cover"
+                width={800}
+                height={800}
+                priority
               />
               {msg.caption && (
                 <span className="text-md text-zinc-100 mt-1 break-words">{msg.caption}</span>
@@ -182,6 +190,7 @@ useEffect(() => {
             </div>
           )}
 
+          {/* ✅ VIDEO MESSAGE */}
           {msg.type === "video" && (
             <div className="flex flex-col">
               <video
@@ -198,106 +207,115 @@ useEffect(() => {
             </div>
           )}
 
-          <div 
-            ref={iconRef} 
-            className={`absolute bottom-0 cursor-pointer z-60 ${
-              isSender 
-                ? "bg-gradient-to-b from-[#7667ff] to-transparent" 
-                : "bg-gradient-to-b from-zinc-800 to-transparent"
-            } ${msg.type === "image" || msg.type === "video" ? "-right-0" : "-right-2"}`}
-          >
-            <ChevronDown
-              className={`hidden text-zinc-300 md:group-hover:block transition-all duration-300 size-5 cursor-pointer ${
-                showActions === msg._id || showReactBox === msg._id ? "block" : ""
-              }`}
-              onClick={() => setShowActions((prev) => (prev === msg._id ? null : msg._id))}
-            />
+          {/* ✅ ACTION DROPDOWN */}
+          {!isDeleted && (
+            <div
+              ref={iconRef}
+              className={`absolute bottom-0 cursor-pointer z-60 ${
+                isSender
+                  ? "bg-gradient-to-b from-[#7667ff] to-transparent"
+                  : "bg-gradient-to-b from-zinc-800 to-transparent"
+              } ${msg.type === "image" || msg.type === "video" ? "-right-0" : "-right-2"}`}
+            >
+              <ChevronDown
+                className={`hidden text-zinc-300 size-5 cursor-pointer transition-all duration-300 ${
+                  showActions === msg._id || showReactBox === msg._id ? "md:block" : "md:group-hover:block"
+                }`}
+                onClick={() => setShowActions((prev) => (prev === msg._id ? null : msg._id))}
+              />
 
-            {/* Action Menu */}
-            {showActions === msg._id && (
-              <div
-                ref={actionRef}
-                className={`absolute z-50 shadow-md ${
-                  isSender
-                    ? showAbove
-                      ? "bottom-full right-0 origin-bottom-right mb-2"
-                      : "top-full right-0 origin-top-right mt-2"
-                    : showAbove
-                    ? "bottom-full left-0 origin-bottom-left mb-2"
-                    : "top-full left-0 origin-top-left mt-2"
-                } bg-zinc-900 border border-zinc-700 p-1 rounded-lg flex flex-col w-36 transition-transform duration-200`}
-              >
-                {actionItems.map((item, i) => (
-                  <button
-                    key={i}
-                    onClick={item.onClick}
-                    className="flex items-center gap-2 px-2 py-1 text-md text-zinc-300 hover:bg-zinc-800 rounded cursor-pointer"
-                  >
-                    {item.icon} {item.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+              {/* Action Menu */}
+              {showActions === msg._id && (
+                <div
+                  ref={actionRef}
+                  className={`absolute z-50 ${
+                    isSender
+                      ? showAbove
+                        ? "bottom-full right-0 origin-bottom-right mb-2"
+                        : "top-full right-0 origin-top-right mt-2"
+                      : showAbove
+                      ? "bottom-full left-0 origin-bottom-left mb-2"
+                      : "top-full left-0 origin-top-left mt-2"
+                  } bg-zinc-900 p-2 rounded-lg flex flex-col w-36 transition-transform duration-200`}
+                >
+                  {actionItems.map((item, i) => (
+                    <button
+                      key={i}
+                      onClick={item.onClick}
+                      className="flex items-center gap-2 px-2 py-1 font-[500] text-md text-zinc-300 hover:bg-zinc-800 rounded-md cursor-pointer"
+                    >
+                      {item.icon} {item.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-
+        {/* ✅ DELETE POPUP (unchanged) */}
         {showDeletePopup && (
-  <div className="fixed inset-0 z-[999] flex items-center justify-center backdrop-blur-sm bg-black/40">
-    <div className="bg-zinc-900 border border-zinc-700 p-6 rounded-xl shadow-2xl w-[90%] max-w-md">
-      <div className="text-white font-semibold text-lg mb-4">Delete Message</div>
+          <div className="fixed inset-0 z-[999] flex items-center justify-center backdrop-blur-sm bg-black/40">
+            <div className="bg-zinc-900 p-6 rounded-xl shadow-2xl w-[90%] max-w-md">
+              <div className="text-white font-semibold text-lg mb-4 text-center">Delete Message</div>
+              <div className="text-zinc-300 text-sm mb-4 text-center">
+                Are you sure you want to delete this message?
+              </div>
+              <div className="flex flex-col gap-1 mb-6 ml-[3vw]">
+                <label className="flex items-center gap-2 text-zinc-300 text-md cursor-pointer font-[400]">
+                  <input
+                    type="checkbox"
+                    checked={deleteType === "me"}
+                    onChange={() => setDeleteType("me")}
+                    className="cursor-pointer size-4"
+                  />
+                  Delete for me
+                </label>
+                <label className={`flex items-center gap-2 text-zinc-300 text-md cursor-pointer font-[400] ${!isSender ? "hidden" : ""}`}>
+                  <input
+                    type="checkbox"
+                    checked={deleteType === "everyone"}
+                    onChange={() => setDeleteType("everyone")}
+                    className="cursor-pointer size-4"
+                  />
+                  Delete for everyone
+                </label>
+              </div>
+              <div className="flex items-center justify-between md:px-[2vw]">
+                <button
+                  onClick={() => setShowDeletePopup(false)}
+                  className="px-4 py-2 text-lg bg-[#49494955] font-[500] cursor-pointer text-white rounded-full hover:bg-[#4d4d4d84] transition-all duration-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                  const wsPayload = {
+                    type: "delete_message",
+                    payload: {
+                      messageId: msg._id,
+                      to: selectedUser?._id,
+                      type: deleteType === "everyone" ? "for_everyone" : "me",
+                    },
+                  };
+                  socketRef.current?.send(JSON.stringify(wsPayload));
 
-      <div className="flex flex-col gap-3 mb-6">
-        <label className="flex items-center gap-2 text-zinc-300 text-sm cursor-pointer">
-          <input
-            type="checkbox"
-            checked={deleteType === "me"}
-            onChange={() => setDeleteType("me")}
-          />
-          Delete for me
-        </label>
+                  const typeForAPI = deleteType === "everyone" ? "for_everyone" : "for_me";
+                  dispatch(deleteMessageAsync({ messageId: msg._id, type: typeForAPI }));
 
-        <label className="flex items-center gap-2 text-zinc-300 text-sm cursor-pointer">
-          <input
-            type="checkbox"
-            checked={deleteType === "everyone"}
-            onChange={() => setDeleteType("everyone")}
-          />
-          Delete for everyone
-        </label>
-      </div>
+                  setShowDeletePopup(false);
+                }}
 
-      <div className="flex justify-end gap-2">
-        <button
-          onClick={() => setShowDeletePopup(false)}
-          className="px-4 py-2 text-sm bg-zinc-700 text-white rounded"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={() => {
-            socketRef.current?.send(
-              JSON.stringify({
-                type: "delete_message",
-                payload: {
-                  messageId: msg._id,
-                  to: selectedUser?._id,
-                  deleteType,
-                },
-              })
-            );
-            setShowDeletePopup(false);
-          }}
-          className="px-4 py-2 text-sm bg-red-600 text-white rounded"
-        >
-          Delete
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+                  className="px-4 py-2 text-lg bg-[#f0060655] font-[500] cursor-pointer text-white rounded-full hover:bg-[#f0060684] transition-all duration-300"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
-
+        {/* ✅ REACTIONS */}
         {msg.reactions && msg.reactions.length > 0 && (
           <div
             className={`absolute -bottom-3 ${
@@ -313,7 +331,8 @@ useEffect(() => {
         )}
       </div>
 
-      {!isSender && (
+      {/* ✅ EMOJI ICON (hide if deleted) */}
+      {!isSender && !isDeleted && (
         <div ref={emojiIconRef} className="hidden md:block cursor-pointer relative">
           <IconMoodSmile
             className={`text-zinc-400 transition-all duration-300 ${

@@ -8,6 +8,7 @@ import Explore from '../Explore/Explore';
 import Groups from '../Group/Groups';
 import Message from '../MessageUi.tsx/MessageLayout';
 import MobileBar from './MobileBar';
+import Setting from '../Settings/Setting';
 
 const MainNavigation = () => {
 
@@ -37,6 +38,7 @@ const MainNavigation = () => {
           {tab === 'explore' && <Explore/>}
           {tab === 'groups' && <Groups/>}
           {tab === 'profile' && <Profile/>}
+          {tab === 'settings' && <Setting/>}
         </div>
 
         <div className="hidden md:block">

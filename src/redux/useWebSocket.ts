@@ -2,7 +2,11 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { useAppDispatch } from "@/redux/hooks";
-import { receiveMessage,addReactionToMessage, } from "@/redux/slice/conversationSlice";
+import {
+  receiveMessage,
+  addReactionToMessage,
+  messageDeleted 
+} from "@/redux/slice/conversationSlice";
 import Cookies from "js-cookie";
 
 type WebSocketPayload = {
@@ -10,7 +14,6 @@ type WebSocketPayload = {
   payload: any;
 };
 
-// ✅ Export socketRef to use globally
 export const socketRef = { current: null as WebSocket | null };
 
 export const useWebSocket = () => {
@@ -31,32 +34,31 @@ export const useWebSocket = () => {
     socketRef.current = ws;
     connectedRef.current = true;
 
-    ws.onopen = () => console.log("✅ WebSocket connected");
+    ws.onopen = () => {
+      console.log("✅ WebSocket connected");
+    };
 
     ws.onmessage = (e) => {
       try {
         const data = JSON.parse(e.data);
+        console.log("📩 WS Message:", data); // 🧠 Always log all data
+
         if (data.type === "receive_message") {
           dispatch(receiveMessage(data.payload.message));
         }
-        
-        
+
         if (data.type === "message_reacted") {
           dispatch(addReactionToMessage(data.payload));
         }
 
-        // ✅ ADD THIS if your backend emits `reaction_update`
         if (data.type === "reaction_update") {
           dispatch(addReactionToMessage(data.payload));
         }
 
-        // ✅ ADD THIS FOR DELETE
         if (data.type === "message_deleted") {
-          dispatch({
-            type: "conversation/messageDeleted",
-            payload: data.payload,
-          });
-        }
+          console.log("🧹 Delete Payload received:", data.payload);
+          dispatch(messageDeleted(data.payload));
+        }        
       } catch (err) {
         console.error("❌ WS parse error", err);
       }
@@ -67,7 +69,6 @@ export const useWebSocket = () => {
       socketRef.current = null;
       connectedRef.current = false;
     };
-
 
     return () => {
       ws.close();

@@ -101,6 +101,7 @@ const Message = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
 
+
   // Redux state
   const dispatch = useAppDispatch();
   const { selectedUser, messages, typingUserIds, onlineUsers, lastSeenMap } = useAppSelector(
@@ -307,6 +308,7 @@ const Message = () => {
             </div>
 
             {/* Chat Messages Section */}
+            {/* Chat Messages Section */}
             <div 
               ref={chatRef} 
               className="chat w-full h-[calc(100%-16vh)] px-[2vw] py-[1vw] overflow-y-scroll hide-scrollbar flex flex-col gap-2"
@@ -318,44 +320,34 @@ const Message = () => {
                       {date}
                     </div>
                   </div>
-                  
+      
                   <div className="flex flex-col gap-2">
-                    {[...new Set(msgs.map((m) => m._id))].map((id) => {
-                      const msg = msgs.find((m) => m._id === id);
-                      if (!msg) return null;
-                      const isSender = msg.sender._id === user?._id;
-                      const time = new Date(msg.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      });
-                      
-                      return (
-                        <MessageBubble
-                          chatRef={chatRef}
-                          key={msg._id}
-                          msg={msg}
-                          isSender={isSender}
-                          time={time}
-                          showActions={showActions}
-                          setShowActions={setShowActions}
-                        />
-                      );
-                    })}
+        {[...new Set(msgs.map((m) => m._id))].map((id) => {
+          const msg = msgs.find((m) => m._id === id);
+          if (!user || !msg || msg.deletedFor?.includes(user._id)) return null;
+          const isSender = msg.sender._id === user?._id;
+          const time = new Date(msg.createdAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
 
-                    {/* Typing Indicator */}
-                    {isTyping && (
-                      <div className="self-start bg-zinc-800 rounded-bl-none rounded-xl px-4 py-2 text-sm text-zinc-200 max-w-[75%] w-fit animate-pulse">
-                        <div className="flex gap-1 items-center">
-                          <div className="w-2 h-2 bg-zinc-300 rounded-full animate-bounce [animation-delay:.1s]" />
-                          <div className="w-2 h-2 bg-zinc-300 rounded-full animate-bounce [animation-delay:.2s]" />
-                          <div className="w-2 h-2 bg-zinc-300 rounded-full animate-bounce [animation-delay:.3s]" />
-                        </div>
-                      </div>
-                    )}
+          return (
+            <MessageBubble
+              key={msg._id}
+              chatRef={chatRef}
+              msg={msg}
+              isSender={isSender}
+              time={time}
+              showActions={showActions}
+              setShowActions={setShowActions}
+            />
+          );
+        })}
                   </div>
                 </div>
               ))}
             </div>
+
 
             {/* Media Preview Section */}
             {mediaPreview && (

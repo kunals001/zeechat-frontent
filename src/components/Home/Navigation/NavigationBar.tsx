@@ -10,6 +10,7 @@ import  Link  from "next/link";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAppSelector } from "@/redux/hooks";
+import { Settings } from "lucide-react";
 
 const NavigationBar = () => {
   const searchParams = useSearchParams();
@@ -22,7 +23,7 @@ const NavigationBar = () => {
     {
       tab: "chats",
       filledIcon: <IconMessageFilled className="text-zinc-200 md:size-7" />,
-      outlineIcon: <IconMessage className="text-zinc-200 md:size-7" />,
+      outlineIcon: <IconMessage className="text-zinc-400 md:size-7" />,
     },
     {
       tab: "groups",
@@ -30,7 +31,7 @@ const NavigationBar = () => {
         <IconUsersGroup stroke={3} className="text-zinc-200 md:size-7" />
       ),
       outlineIcon: (
-        <IconUsersGroup stroke={2} className="text-zinc-200 md:size-7" />
+        <IconUsersGroup stroke={2} className="text-zinc-400 md:size-7" />
       ),
     },
     {
@@ -39,7 +40,7 @@ const NavigationBar = () => {
         <IconCompassFilled className="text-zinc-200 md:size-7" />
       ),
       outlineIcon: (
-        <IconCompass className="text-zinc-200 md:size-7" />
+        <IconCompass className="text-zinc-400 md:size-7" />
       ),
     },
   ];
@@ -65,7 +66,13 @@ const NavigationBar = () => {
         })}
       </div>
 
-      <div className="items-center justify-center hidden md:flex">
+
+      <div className="items-center justify-center hidden md:flex flex-col gap-2">
+
+        <Link href="/?tab=settings" className="p-3 rounded-full transition-all duration-300 hover:bg-zinc-800">
+          <Settings className="md:size-7 size-6 text-zinc-400"/>
+        </Link>
+
         <Link href="/?tab=profile" className="p-1.5 rounded-full transition-all duration-300 hover:bg-zinc-800">
           {typeof user?.profilePic === "string" && user.profilePic.trim() !== "" ? (
           <Image
