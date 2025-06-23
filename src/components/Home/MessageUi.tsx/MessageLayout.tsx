@@ -98,6 +98,7 @@ const Message = () => {
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const panelToggleRef = useRef<HTMLDivElement>(null); // NEW
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
 
@@ -115,11 +116,16 @@ const Message = () => {
   const lastSeen = selectedUser ? lastSeenMap[selectedUser._id] ?? null : null;
 
   // Group messages by date
+
+  const visibleMessages = user
+  ? messages.filter((msg) => !msg.deletedFor?.includes(user._id))
+  : [];
+
   const groupedMessages: { [date: string]: typeof messages } = {};
-  messages.forEach((msg) => {
-    const dateLabel = formatChatDate(msg.createdAt);
-    if (!groupedMessages[dateLabel]) groupedMessages[dateLabel] = [];
-    groupedMessages[dateLabel].push(msg);
+  visibleMessages.forEach((msg) => {
+  const dateLabel = formatChatDate(msg.createdAt);
+  if (!groupedMessages[dateLabel]) groupedMessages[dateLabel] = [];
+  groupedMessages[dateLabel].push(msg);
   });
 
   // Fetch messages when selected user changes
@@ -184,6 +190,25 @@ const Message = () => {
     socketRef.current.addEventListener("message", handleMessage);
     return () => socketRef.current?.removeEventListener("message", handleMessage);
   }, [selectedUser, dispatch]);
+
+  useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    const target = event.target as Node;
+
+    if (
+      panelRef.current &&
+      !panelRef.current.contains(target) &&
+      panelToggleRef.current &&
+      !panelToggleRef.current.contains(target)
+    ) {
+      setOpenPanel(false);
+    }
+  };
+
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
 
   /**
    * Handles sending a message
@@ -289,6 +314,7 @@ const Message = () => {
                 
                 {/* Panel Toggle Button */}
                 <div 
+                  ref={panelToggleRef}
                   onClick={() => setOpenPanel(prev => !prev)} 
                   className={`text-zinc-400 cursor-pointer md:p-1 p-1.5 rounded-full md:rounded-lg ${openPanel ? "bg-zinc-800" : "hover:bg-zinc-800"}`}
                 >
@@ -298,9 +324,9 @@ const Message = () => {
                 {/* Panel Dropdown */}
                 <div 
                   ref={panelRef} 
-                  className={`transform transition-all duration-300 origin-top-right ${
+                  className={`transform origin-top-right transition-all duration-300 ${
                     openPanel ? "scale-100" : "scale-0"
-                  } absolute top-[6vh] right-[1.5vh] md:top-[3.1vw] md:right-[2vw] ease-[cubic-bezier(0.4, 0, 0.2, 1)] overflow-hidden rounded-lg z-40 bg-zinc-900`}
+                  } absolute top-[6vh] right-[1.5vh] md:top-[3.1vw] md:right-[2vw] ease-out overflow-hidden rounded-lg z-40 bg-zinc-900`}
                 >
                   <Panel/>
                 </div>

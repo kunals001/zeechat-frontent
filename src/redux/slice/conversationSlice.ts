@@ -112,6 +112,22 @@ export const deleteMessageAsync = createAsyncThunk<
 });
 
 
+/// -------------- Clear Chat For Me ----------------
+export const clearChatForMeAsync = createAsyncThunk<
+  string, 
+  string,
+  { rejectValue: string }
+>("conversation/clearChatForMe", async (selectedUserId, { rejectWithValue }) => {
+  try {
+    await axios.delete(`${API_URL}/api/messages/clear/${selectedUserId}`);
+    return selectedUserId;
+  } catch (error) {
+    const err = error as AxiosError<{ message: string }>;
+    return rejectWithValue(err.response?.data?.message || "Failed to clear chat");
+  }
+});
+
+
 
 // -------------------- Slice --------------------
 const conversationSlice = createSlice({
@@ -124,7 +140,7 @@ const conversationSlice = createSlice({
         state.messages.push(action.payload);
       }
     },
-
+    
     selectUser(state, action: PayloadAction<User>) {
       state.selectedUser = action.payload;
       state.messages = [];
@@ -181,26 +197,38 @@ const conversationSlice = createSlice({
       state.lastSeenMap[action.payload.userId] = action.payload.lastSeen;
     },
 
-messageDeleted: (
-  state,
-  action: PayloadAction<{ messageId: string; deleteType: "me" | "everyone"; userId: string }>
-) => {
-  const { messageId, deleteType, userId } = action.payload;
-  const msg = state.messages.find((m) => m._id === messageId);
-  if (!msg) return;
+    messageDeleted: (
+      state,
+      action: PayloadAction<{ messageId: string; deleteType: "me" | "everyone";     userId: string }>
+    ) => {
+      const { messageId, deleteType, userId } = action.payload;
+      const msg = state.messages.find((m) => m._id === messageId);
+      if (!msg) return;
 
-  if (deleteType === "me") {
-    if (!msg.deletedFor) msg.deletedFor = [];
-    if (!msg.deletedFor.includes(userId)) {
-      msg.deletedFor.push(userId);
+      if (deleteType === "me") {
+        if (!msg.deletedFor) msg.deletedFor = [];
+        if (!msg.deletedFor.includes(userId)) {
+          msg.deletedFor.push(userId);
+        }
+      } else if (deleteType === "everyone") {
+        msg.message = "This message was deleted.";
+        msg.type = "text";
+        msg.reactions = [];
+      }
+    },
+
+    clearChatForMe: (state, action: PayloadAction<{ userId: string }>) => {
+    state.messages = state.messages.filter(
+    (msg) =>
+      msg.sender._id !== action.payload.userId &&
+      msg.receiver?._id !== action.payload.userId
+      );
+    },
+
+    clearSelectedUser: (state) => {
+      state.selectedUser = null;    
     }
-  } else if (deleteType === "everyone") {
-    msg.message = "This message was deleted.";
-    msg.type = "text";
-    msg.reactions = [];
-  }
-}
-
+  
 
   },
 
@@ -275,6 +303,14 @@ messageDeleted: (
             msg.deletedFor.push("me"); // "me" just a placeholder; real filtering       logic will be in frontend
           }
         }
+      })
+
+      .addCase(clearChatForMeAsync.fulfilled, (state, action) => {
+        const currentUserId = action.meta.arg; // selectedUserId passed earlier
+        state.messages = state.messages.filter((msg) => {
+          if (!msg.deletedFor) return true;
+          return !msg.deletedFor.includes(currentUserId);
+        });
       });
 
   },
@@ -289,7 +325,9 @@ export const {
   updateOnlineStatus,
   updateLastSeen,
   addReactionToMessage,
-  messageDeleted
+  messageDeleted,
+  clearChatForMe,
+  clearSelectedUser
 } = conversationSlice.actions;
 
 export default conversationSlice.reducer;

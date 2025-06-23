@@ -5,7 +5,8 @@ import { useAppDispatch } from "@/redux/hooks";
 import {
   receiveMessage,
   addReactionToMessage,
-  messageDeleted 
+  messageDeleted,
+  clearChatForMe
 } from "@/redux/slice/conversationSlice";
 import Cookies from "js-cookie";
 
@@ -41,7 +42,6 @@ export const useWebSocket = () => {
     ws.onmessage = (e) => {
       try {
         const data = JSON.parse(e.data);
-        console.log("📩 WS Message:", data); // 🧠 Always log all data
 
         if (data.type === "receive_message") {
           dispatch(receiveMessage(data.payload.message));
@@ -58,7 +58,12 @@ export const useWebSocket = () => {
         if (data.type === "message_deleted") {
           console.log("🧹 Delete Payload received:", data.payload);
           dispatch(messageDeleted(data.payload));
-        }        
+        }    
+
+        if (data.type === "chat_cleared") {
+          dispatch(clearChatForMe({ userId: data.payload.userId }));
+        }
+    
       } catch (err) {
         console.error("❌ WS parse error", err);
       }
