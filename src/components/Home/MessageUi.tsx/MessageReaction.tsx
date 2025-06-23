@@ -24,37 +24,35 @@ export default function ReactionBox({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showAbove, setShowAbove] = useState(false);
 
-  // Close reaction box on outside click
+  // ✅ Added selectedEmoji state
+  const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
 
-// 👇 ReactionBox: Close full box on outside click
-useEffect(() => {
-  const handleClick = (e: MouseEvent) => {
-    if (
-      !boxRef.current?.contains(e.target as Node) &&
-      !anchorRef.current?.contains(e.target as Node)
-    ) {
-      onClose();
-    }
-  };
-  document.addEventListener("click", handleClick); // ✅ CHANGED TO CLICK
-  return () => document.removeEventListener("click", handleClick);
-}, [onClose]);
-
-// 👇 ReactionBox: Close emoji picker popup on outside click
   useEffect(() => {
-  if (!showEmojiPicker) return;
+    const handleClick = (e: MouseEvent) => {
+      if (
+        !boxRef.current?.contains(e.target as Node) &&
+        !anchorRef.current?.contains(e.target as Node)
+      ) {
+        onClose();
+      }
+    };
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, [onClose]);
 
-  const handleClickOutside = (e: MouseEvent) => {
-    if (!emojiPickerRef.current?.contains(e.target as Node)) {
-      setShowEmojiPicker(false);
-    }
-  };
+  useEffect(() => {
+    if (!showEmojiPicker) return;
 
-  document.addEventListener("click", handleClickOutside); // ✅ CHANGED TO CLICK
-  return () => document.removeEventListener("click", handleClickOutside);
-}, [showEmojiPicker]);
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!emojiPickerRef.current?.contains(e.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    };
 
-  // Decide whether to show emoji picker above or below
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [showEmojiPicker]);
+
   useEffect(() => {
     if (
       showEmojiPicker &&
@@ -73,42 +71,48 @@ useEffect(() => {
     <div
       ref={boxRef}
       onMouseDown={(e) => e.stopPropagation()}
-      className="absolute z-[999] left-full -top-3 ml-2 origin-left px-1 py-1 rounded-full bg-zinc-800 flex gap-1"
+      className="absolute z-[999] left-full -top-3 ml-2 origin-left md:px-[.5vw] md:py-[.3vw] rounded-full bg-zinc-800 flex items-center transition-all duration-400 ease-in-out animate-wave-pop"
     >
-      {/* Quick emoji buttons */}
-      {emojis.map((emoji, index) => (
-        <button
-          key={index}
-          onClick={() => onSelect(emoji)}
-          className="p-1 rounded-full hover:bg-zinc-600 transition duration-200"
-        >
-          {emoji}
-        </button>
+      {[...emojis, "plus"].map((emoji, index) => (
+        <div key={index} className="flex items-center">
+          {emoji === "plus" ? (
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowEmojiPicker(prev => !prev);
+              }}
+              className="p-1 bg-zinc-700 hover:bg-zinc-600 transition duration-200 rounded-full cursor-pointer md:ml-1"
+            >
+              <Plus className="text-zinc-400 md:size-8" />
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                setSelectedEmoji(emoji); // ✅ set selected emoji
+                onSelect(emoji);
+              }}
+              className={`md:text-[1.3vw] rounded-full transition duration-200 md:px-2 md:py-1 md:ml-1 hover:bg-zinc-600 ${
+                selectedEmoji === emoji ? "bg-zinc-700" : ""
+              }`} // ✅ apply bg-zinc-800 if selected
+            >
+              {emoji}
+            </button>
+          )}
+        </div>
       ))}
 
-      {/* Plus icon */}
-      <div
-        onClick={(e) => {
-          e.stopPropagation(); // ✅ prevent closing due to outer click
-          setShowEmojiPicker(prev => !prev);
-        }}
-        className="p-1 hover:bg-zinc-600 transition duration-200 rounded-full cursor-pointer"
-      >
-        <Plus className="text-zinc-400" />
-      </div>
-
-      {/* Emoji Picker */}
       {showEmojiPicker && (
         <div
           ref={emojiPickerRef}
           className={`absolute z-[999] ${showAbove ? "bottom-full mb-2" : "top-full mt-2"} left-1 scale-90 origin-top-left transition-all duration-300`}
         >
-          <div className=" h-[230px] overflow-y-scroll hide-scrollbar rounded-lg bg-zinc-900 border border-zinc-700">
+          <div className="h-[230px] overflow-y-scroll hide-scrollbar rounded-lg bg-zinc-900 ">
             <Picker
               data={data}
               theme="dark"
               onEmojiSelect={(emoji: any) => {
                 onSelect(emoji.native);
+                setSelectedEmoji(emoji.native); 
                 setShowEmojiPicker(false);
               }}
               previewPosition="none"
