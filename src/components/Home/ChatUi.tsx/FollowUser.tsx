@@ -56,7 +56,7 @@ const FollowUser = ({ followUsers }: { followUsers: User[] }) => {
                 <span className="md:text-[.7vw] text-zinc-400 leading-none md:pt-[.7vh] text-[1.3vh] pt-[1vh] select-none">
                   2 hours ago
                 </span>
-                <ChevronDown className="text-zinc-400 md:hidden group-hover:block " />
+                <ChevronDown className="text-zinc-400 hidden group-hover:block " />
               </div>
             </div>
           </div>

@@ -1,5 +1,7 @@
+"use client"
 import React from 'react'
 import "@/app/globals.css"
+import { FollowUsers, Logout, Themes, UserProfile } from './Actions'
 
 const Setting = () => {
   return (
@@ -10,7 +12,15 @@ const Setting = () => {
         </div>
       </div>
 
-      <div className="">
+      <div className="md:px-[1vw] px-1.5">
+        <UserProfile/>
+        <div className=" h-[2px] bg-zinc-800 md:mt-[1vw] mt-[1vh] rounded-full"></div>
+
+        <div className="md:mt-[1.5vw] mt-[2vh] flex flex-col md:gap-[.5vw] gap-[1vh]">
+          <FollowUsers/>
+          <Themes/>
+          <Logout/>
+        </div>
       </div>
     </div>
   )
