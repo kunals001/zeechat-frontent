@@ -7,7 +7,9 @@ import {
   addReactionToMessage,
   messageDeleted,
   clearChatForMe,
-  messageSeen
+  messageSeen,
+  updateMessageSeenBy,
+  updateLastMessageInList
 } from "@/redux/slice/conversationSlice";
 import Cookies from "js-cookie";
 
@@ -113,6 +115,32 @@ export const useWebSocket = () => {
             seenBy: data.payload.seenBy, // ✅ sahi key
           }));
         }
+
+        if (data.type === "seen_message") {
+          dispatch(updateMessageSeenBy({
+            messageId: data.payload.messageId,
+            userId: data.payload.userId,
+          }));
+        }
+
+        
+        if (data.type === "last_message_updated") {
+           console.log("🔥 Last message update received");
+
+           const msg = data.payload.lastMessage;
+
+           dispatch(updateLastMessageInList({
+             conversationId: data.payload.conversationId,
+             lastMessage: {
+               _id: msg._id,
+               message: msg.message,
+               createdAt: msg.createdAt,
+             }
+           }));
+
+
+}
+
 
     
       } catch (err) {

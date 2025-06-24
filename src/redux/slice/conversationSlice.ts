@@ -25,14 +25,26 @@ interface FetchMessagesResponse {
   participants: User[];
 }
 
+interface ConversationListItem {
+  user: any;
+  _id: string; // other user's id
+  fullName: string;
+  userName: string;
+  profilePic: string;
+  lastMessage: string;
+  lastMessageAt: string;
+  participants: string[]
+}
+
 interface ConversationState {
   messages: Message[];
   selectedUser: User | null;
   isLoading: boolean;
   error: string | null;
-  typingUserIds: string[]; // userIds typing
+  typingUserIds: string[];
   onlineUsers: Record<string, boolean>;
   lastSeenMap: Record<string, string>;
+  conversations: ConversationListItem[]; // ✅ new
 }
 
 // -------------------- Initial State --------------------
@@ -44,6 +56,7 @@ const initialState: ConversationState = {
   typingUserIds: [],
   onlineUsers: {},
   lastSeenMap: {},
+  conversations: [],
 };
 
 // -------------------- Async Thunks --------------------
@@ -61,6 +74,9 @@ export const fetchMessages = createAsyncThunk<
   }
 });
 
+
+
+/// ---------------- Send Message ----------------
 export const sendMessage = createAsyncThunk<
   Message,
   SendMessagePayload,
@@ -81,9 +97,25 @@ export const sendMessage = createAsyncThunk<
   }
 );
 
+/// ---------------- Fetch Conversations ----------------
+export const fetchConversations = createAsyncThunk<
+  ConversationListItem[],
+  void,
+  { rejectValue: string }
+>("conversation/fetchConversations", async (_, { rejectWithValue }) => {
+  try {
+    const res = await axios.get(`${API_URL}/api/messages/`);
+    return res.data;
+  } catch (error) {
+    const err = error as AxiosError<{ message: string }>;
+    return rejectWithValue(err.response?.data?.message || "Failed to fetch conversations");
+  }
+});
 
 
 
+
+/// ---------------- Add Reaction To Message ----------------
 export const addReactionToMessageAsync = createAsyncThunk<
   { messageId: string; emoji: string; userId: string },
   { messageId: string; emoji: string },
@@ -273,7 +305,46 @@ const conversationSlice = createSlice({
           msg.seenBy.push(seenBy);
         }
       }
-    }
+    },
+
+    updateMessageSeenBy: (state, action) => {
+      const { messageId, userId } = action.payload;
+      const msg = state.messages.find(m => m._id === messageId);
+      if (msg && !msg.seenBy?.includes(userId)) {
+        msg.seenBy?.push(userId);
+      }
+    },
+
+    updateLastMessageInList: (
+  state,
+  action: PayloadAction<{
+    conversationId: string;
+    lastMessage: {
+      _id: string;
+      message: string;
+      createdAt: string;
+    };
+  }>
+) => {
+  const { conversationId, lastMessage } = action.payload;
+
+  console.log("🟡 Incoming conversationId:", conversationId);
+  console.log("📦 Redux conversations:", state.conversations.map(c => c._id));
+
+  const convo = state.conversations.find((c) => c._id === conversationId);
+  
+  if (convo) {
+    convo.lastMessage = lastMessage.message;
+    convo.lastMessageAt = lastMessage.createdAt;
+    console.log("✅ Message updated in list");
+  } else {
+    console.log("❌ No matching conversation found");
+  }
+}
+
+
+
+
 
   },
 
@@ -354,7 +425,11 @@ const conversationSlice = createSlice({
           if (!msg.deletedFor) return true;
           return !msg.deletedFor.includes(currentUserId);
         });
-      });
+      })
+      .addCase(fetchConversations.fulfilled, (state, action) => {
+        state.conversations = action.payload;
+      })
+
 
   },
 });
@@ -371,7 +446,9 @@ export const {
   messageDeleted,
   clearChatForMe,
   clearSelectedUser,
-  messageSeen
+  messageSeen,
+  updateMessageSeenBy,
+  updateLastMessageInList
 } = conversationSlice.actions;
 
 export default conversationSlice.reducer;
