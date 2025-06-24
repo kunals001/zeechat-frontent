@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import Picker from "@emoji-mart/react";
 import data from "@emoji-mart/data";
 
+import type { Emoji } from 'emoji-mart';
+
+
 interface ReactionBoxProps {
   onClose: () => void;
   onSelect: (emoji: string) => void;
@@ -38,7 +41,7 @@ export default function ReactionBox({
     };
     document.addEventListener("click", handleClick);
     return () => document.removeEventListener("click", handleClick);
-  }, [onClose]);
+  }, [onClose,anchorRef]);
 
   useEffect(() => {
     if (!showEmojiPicker) return;
@@ -65,7 +68,7 @@ export default function ReactionBox({
       const height = 280;
       setShowAbove(chat.bottom - anchor.bottom < height && anchor.top - chat.top > height);
     }
-  }, [showEmojiPicker]);
+  }, [showEmojiPicker,anchorRef,chatRef]);
 
   return (
     <div
@@ -110,10 +113,12 @@ export default function ReactionBox({
             <Picker
               data={data}
               theme="dark"
-              onEmojiSelect={(emoji: any) => {
-                onSelect(emoji.native);
-                setSelectedEmoji(emoji.native); 
-                setShowEmojiPicker(false);
+              onEmojiSelect={(emoji: Emoji) => {
+                if ('native' in emoji && typeof emoji.native === 'string') {
+                  onSelect(emoji.native);
+                  setSelectedEmoji(emoji.native);
+                  setShowEmojiPicker(false);
+                }
               }}
               previewPosition="none"
               emojiSize={20}

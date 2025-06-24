@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios, { AxiosError } from "axios";
 import type { Message, User, MessageType } from "../type";
+import { RootState } from '../reducer';
+
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -11,6 +13,7 @@ interface SendMessagePayload {
   type: MessageType;
   mediaUrl?: string;
   caption?: string;
+  replyTo?: string;
 }
 
 interface SendMessageResponse {
@@ -64,11 +67,11 @@ export const sendMessage = createAsyncThunk<
   { rejectValue: string }
 >(
   "conversation/sendMessage",
-  async ({ userId, message, type, caption, mediaUrl }, { rejectWithValue }) => {
+  async ({ userId, message, type, caption, mediaUrl, replyTo }, { rejectWithValue }) => {
     try {
       const res = await axios.post<SendMessageResponse>(
         `${API_URL}/api/messages/send/${userId}`,
-        { message, type, caption, mediaUrl } // ✅ Send caption to backend
+        { message, type, caption, mediaUrl, replyTo } // ✅ Add replyTo here
       );
       return res.data.message;
     } catch (error) {
@@ -80,36 +83,48 @@ export const sendMessage = createAsyncThunk<
 
 
 
+
 export const addReactionToMessageAsync = createAsyncThunk<
   { messageId: string; emoji: string; userId: string },
   { messageId: string; emoji: string },
-  { rejectValue: string }
->("conversation/addReactionToMessage", async ({ messageId, emoji }, { rejectWithValue, getState }) => {
-  try {
-    await axios.post(`${API_URL}/api/messages/react`, { messageId, emoji });
-    const userId = (getState() as any).auth.user._id;
-    return { messageId, emoji, userId };
-  } catch (error) {
-    const err = error as AxiosError<{ message: string }>;
-    return rejectWithValue(err.response?.data?.message || "Failed to react");
+  { state: RootState; rejectValue: string }
+>(
+  "conversation/addReactionToMessage",
+  async ({ messageId, emoji }, { rejectWithValue, getState }) => {
+    try {
+      await axios.post(`${API_URL}/api/messages/react`, { messageId, emoji });
+
+      const user = getState().auth.user;
+      if (!user) {
+        return rejectWithValue("User not authenticated");
+      }
+
+      return { messageId, emoji, userId: user._id };
+    } catch (error) {
+      const err = error as AxiosError<{ message: string }>;
+      return rejectWithValue(err.response?.data?.message || "Failed to react");
+    }
   }
-});
+);
+
 
 
 // ---------------- Delete Message ----------------
 export const deleteMessageAsync = createAsyncThunk<
-  { messageId: string; type: "for_me" | "for_everyone" },
+  { messageId: string; type: "for_me" | "for_everyone"; userId: string },
   { messageId: string; type: "for_me" | "for_everyone" },
   { rejectValue: string }
->("conversation/deleteMessage", async ({ messageId, type }, { rejectWithValue }) => {
+>("conversation/deleteMessage", async ({ messageId, type }, { rejectWithValue, getState }) => {
   try {
+    const userId = (getState() as RootState).auth.user?._id!;
     await axios.delete(`${API_URL}/api/messages/message/${messageId}?type=${type}`);
-    return { messageId, type };
+    return { messageId, type, userId };
   } catch (error) {
     const err = error as AxiosError<{ message: string }>;
     return rejectWithValue(err.response?.data?.message || "Failed to delete message");
   }
 });
+
 
 
 /// -------------- Clear Chat For Me ----------------
@@ -134,6 +149,21 @@ const conversationSlice = createSlice({
   name: "conversation",
   initialState,
   reducers: {
+
+    seenMessage: (
+       state,
+       action: PayloadAction<{ messageId: string; userId: string }>
+     ) => {
+       const { messageId, userId } = action.payload;
+       const msg = state.messages.find((m) => m._id === messageId);
+       if (!msg) return;
+
+       // ✅ Use Set for safety against duplicates
+       const seenSet = new Set(msg.seenBy ?? []);
+       seenSet.add(userId);
+       msg.seenBy = Array.from(seenSet);
+     },
+    
     receiveMessage(state, action: PayloadAction<Message>) {
       const exists = state.messages.some((msg) => msg._id === action.payload._id);
       if (!exists) {
@@ -197,7 +227,7 @@ const conversationSlice = createSlice({
       state.lastSeenMap[action.payload.userId] = action.payload.lastSeen;
     },
 
-    messageDeleted: (
+    messageDeleted: (      
       state,
       action: PayloadAction<{ messageId: string; deleteType: "me" | "everyone";     userId: string }>
     ) => {
@@ -211,9 +241,10 @@ const conversationSlice = createSlice({
           msg.deletedFor.push(userId);
         }
       } else if (deleteType === "everyone") {
-        msg.message = "This message was deleted.";
-        msg.type = "text";
-        msg.reactions = [];
+        if (!msg.deletedFor) msg.deletedFor = [];
+        // 👇 Add receiver only (not sender)
+        msg.deletedFor.push(userId); // userId = receiver here
+        msg.isDeleted = true;    
       }
     },
 
@@ -227,8 +258,22 @@ const conversationSlice = createSlice({
 
     clearSelectedUser: (state) => {
       state.selectedUser = null;    
+    },
+    messageSeen: (
+      state,
+      action: PayloadAction<{ messageId: string; seenBy: string }>
+    ) => {
+      const { messageId, seenBy } = action.payload;
+      const msg = state.messages.find((m) => m._id === messageId);
+      if (msg) {
+        if (!Array.isArray(msg.seenBy)) {
+          msg.seenBy = [];
+        }
+        if (!msg.seenBy.includes(seenBy)) {
+          msg.seenBy.push(seenBy);
+        }
+      }
     }
-  
 
   },
 
@@ -246,7 +291,6 @@ const conversationSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload || "Error loading messages";
       })
-
       .addCase(sendMessage.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -287,24 +331,23 @@ const conversationSlice = createSlice({
         msg.reactions.push({ emoji, userId });
       }
       })
-      
       .addCase(deleteMessageAsync.fulfilled, (state, action) => {
-        const { messageId, type } = action.payload;
+        const { messageId, type, userId } = action.payload;
 
         if (type === "for_everyone") {
-         // Remove the message entirely
           state.messages = state.messages.filter((m) => m._id !== messageId);
         }
 
         if (type === "for_me") {
           const msg = state.messages.find((m) => m._id === messageId);
           if (msg) {
-            if (!msg.      deletedFor) msg.deletedFor = [];
-            msg.deletedFor.push("me"); // "me" just a placeholder; real filtering       logic will be in frontend
+            if (!msg.deletedFor) msg.deletedFor = [];
+            if (!msg.deletedFor.includes(userId)) {
+              msg.deletedFor.push(userId);
+            }
           }
         }
       })
-
       .addCase(clearChatForMeAsync.fulfilled, (state, action) => {
         const currentUserId = action.meta.arg; // selectedUserId passed earlier
         state.messages = state.messages.filter((msg) => {
@@ -327,7 +370,8 @@ export const {
   addReactionToMessage,
   messageDeleted,
   clearChatForMe,
-  clearSelectedUser
+  clearSelectedUser,
+  messageSeen
 } = conversationSlice.actions;
 
 export default conversationSlice.reducer;

@@ -62,7 +62,7 @@ const Profile = () => {
 
 
   return (
-    <div className='md:w-[30vw] md:h-[calc(100vh-7vw)] text-white bg-[#181818f5] w-full h-[calc(100vh-6vh)] overflow-y-scroll hide-scrollbar border-r border-zinc-800'>
+    <div className='md:w-[30vw] md:h-[calc(100vh-7vw)] text-white bg-[#181818f5] w-full h-[calc(100vh-6vh)] overflow-y-scroll hide-scrollbar border-r border-zinc-800 pro-wave-in'>
       <div className="w-full md:p-[1vw] p-[2vh] text-zinc-200 flex items-center justify-between">
         <h2 className='md:text-[1.5vw] text-[3vh] font-second font-[500] select-none'>Profile</h2>
       </div>
@@ -118,7 +118,7 @@ const Profile = () => {
           <button
             type="button"
             onClick={() => setIsEditing(true)}
-            className="md:text-[1vw] text-[2vh] p-1.5 rounded-md font-semibold text-zinc-100 md:px-[1vh] md:py-[.4vh] md:rounded-lg bg-zinc-700 cursor-pointer hover:scale-105 transition-all duration-300 ease-in-out"
+            className="md:text-[1.1vw] text-[2vh] p-1.5 rounded-md font-semibold text-zinc-100 md:px-[.8vw] md:py-[1vh] md:rounded-lg bg-zinc-700 hover:bg-zinc-600 cursor-pointer transition-all duration-300 ease-in-out"
           >
             Edit Profile
           </button>
@@ -126,7 +126,7 @@ const Profile = () => {
           <button
             type="submit"
             disabled={!isEditing || isLoading}
-            className="md:text-[1vw] text-[2vh] rounded-md p-1.5 text-zinc-100 md:px-[1vh] md:py-[.4vh] md:rounded-lg bg-gradient-to-l from-prime to-second cursor-pointer focus:ring-2 ring-prime font-semibold disabled:opacity-50"
+            className="md:text-[1.1vw] text-[2vh] rounded-md p-1.5 text-zinc-100 md:px-[1vw] md:py-[.9vh] md:rounded-lg bg-gradient-to-l from-prime to-second cursor-pointer focus:ring-2 ring-prime font-semibold disabled:opacity-50"
           >
             {isLoading ? <div className="flex items-center justify-center gap-1"><Loader2 className="animate-spin text-white" />Saving...</div> : "Save Profile"}
           </button>

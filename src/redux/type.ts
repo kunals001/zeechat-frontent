@@ -30,6 +30,7 @@ export type User = {
 export type MessageType = "text" | "image" | "video" | "file";
 
 export interface Message {
+  seenBy?: string[];
   _id: string;
   mediaUrl?: string;
   sender: {
@@ -53,5 +54,6 @@ export interface Message {
   reactions?: {
     userId: string;
     emoji: string;
-  }[]
+  }[];
+  replyTo?: Message | string;
 }

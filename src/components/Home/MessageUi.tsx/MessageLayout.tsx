@@ -21,6 +21,8 @@ import MessageBubble from "./MessageAction";
 import axios from "axios";
 import type { MessageType } from "@/redux/type";
 
+type EmojiType = { native?: string };
+
 /**
  * Formats a date string into a human-readable chat date label
  * @param dateStr - ISO date string
@@ -379,7 +381,7 @@ const Message = () => {
             {mediaPreview && (
               <div className="absolute bottom-[6.5vh] md:bottom-[5vw] left-0 w-full bg-zinc-900 p-4 flex flex-col items-center gap-2 z-50">
                 {mediaType === "image" ? (
-                  <img src={mediaPreview} className="max-h-[30vh] rounded-md" />
+                  <Image alt="media preview" width={800} height={800} src={mediaPreview} className="max-h-[30vh] rounded-md" loading="lazy" />
                 ) : (
                   <video src={mediaPreview} className="max-h-[30vh] rounded-md" controls />
                 )}
@@ -465,7 +467,7 @@ const Message = () => {
                 <Picker
                   data={data}
                   theme="dark"
-                  onEmojiSelect={(emoji: any) => {
+                  onEmojiSelect={(emoji: EmojiType) => {
                     setMessage((prev) => prev + emoji.native);
                     inputRef.current?.focus();
                   }}

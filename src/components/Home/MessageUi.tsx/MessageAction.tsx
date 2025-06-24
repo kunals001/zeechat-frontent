@@ -8,6 +8,8 @@ import { addReactionToMessageAsync, deleteMessageAsync } from "@/redux/slice/con
 import { socketRef } from "@/redux/useWebSocket";
 import type { MessageType } from '@/redux/type';
 import Image from "next/image";
+import { Check, CheckCheck } from "lucide-react";
+
 
 interface Message {
   _id: string;
@@ -19,6 +21,7 @@ interface Message {
   type: MessageType;
   deletedFor?: string[];
   isDeleted?: boolean;
+  seenBy?: string[];
 }
 
 interface MessageBubbleProps {
@@ -54,6 +57,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   const [deleteType, setDeleteType] = useState<"me" | "everyone">("me");
   const [lastReactionKey, setLastReactionKey] = useState<string | null>(null);
 
+
   // ✅ Flag to check if message was deleted for UI
   const isDeleted = msg.message === "This message was deleted." || msg.isDeleted;
 
@@ -82,7 +86,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showActions, msg._id, showDeletePopup]);
+  }, [showActions, msg._id, showDeletePopup,setShowActions]);
 
   // ✅ Hide reaction box when clicking outside
   useEffect(() => {
@@ -131,9 +135,47 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     }
   }, [lastReactionKey]);
 
+    useEffect(() => {
+  if (!msg._id || !msg.sender?._id || isSender || !user?._id) return;
+
+  const alreadySeen = Array.isArray(msg.seenBy) && msg.seenBy.includes(user._id);
+  if (alreadySeen) return;
+
+  const sendSeen = () => {
+    console.log("📤 Sending seen_message", {
+      to: msg.sender._id,
+      messageId: msg._id,
+    });
+
+    socketRef.current?.send(
+      JSON.stringify({
+        type: "seen_message",
+        payload: {
+          messageId: msg._id,
+          to: msg.sender._id,
+        },
+      })
+    );
+  };
+
+  if (socketRef.current?.readyState === WebSocket.OPEN) {
+    sendSeen();
+  } else {
+    const interval = setInterval(() => {
+      if (socketRef.current?.readyState === WebSocket.OPEN) {
+        clearInterval(interval);
+        sendSeen();
+      }
+    }, 300);
+    // Clean up
+    return () => clearInterval(interval);
+  }
+    }, [msg._id, msg.seenBy, isSender, user?._id]);
+
+
   // ✅ Actions in dropdown
   const actionItems = [
-    { icon: <Forward className="md:size-5" />, label: "Forward", disabled: isDeleted },
+    { icon: <Forward className="md:size-5" />, label: "Reply", disabled: isDeleted },
     {
       icon: <IconMoodSmile className="md:size-5" />,
       label: "React",
@@ -141,7 +183,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         setShowActions(null);
         setShowReactBox(msg._id);
       },
-      disabled: isDeleted
+      disabled: isDeleted,
+      hidden:isSender
+
     },
     { icon: <Copy className="md:size-5" />, label: "Copy", disabled: isDeleted },
     {
@@ -173,18 +217,30 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           {/* ✅ TEXT MESSAGE (Handle deleted) */}
           {msg.type === "text" && (
             <>
-              {isDeleted ? (
-                <span className="text-md text-zinc-100 break-words">
-                  This message was deleted.
+              {isDeleted  ? (
+                <span className={`text-md text-zinc-100 break-words `}>
+                  This message was deleted
                 </span>
               ) : (
                 <span className="text-md text-zinc-100 break-words">
                   {msg.message}
                 </span>
               )}
-              <span className="text-[0.65rem] text-zinc-100 opacity-80 whitespace-nowrap select-none">
-                {time}
-              </span>
+             <div className="flex items-center gap-1">
+  <span className="text-[0.65rem] text-zinc-100 opacity-80 whitespace-nowrap select-none">
+    {time}
+  </span>
+  {isSender && (
+    <span className="flex items-center gap-1 ml-1">
+      {msg.seenBy?.includes(selectedUser?._id || "") ? (
+        <CheckCheck className="w-4 h-4 text-green-400" />
+      ) : (
+        <Check className="w-4 h-4 text-white" />
+      )}
+    </span>
+  )}
+</div>
+
             </>
           )}
 
@@ -233,7 +289,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                 isSender
                   ? "bg-gradient-to-b from-[#7667ff] to-transparent"
                   : "bg-gradient-to-b from-zinc-800 to-transparent"
-              } ${msg.type === "image" || msg.type === "video" ? "-right-0" : "-right-2"}`}
+              } ${msg.type === "image" || msg.type === "video" ? "-right-0" : "-right-2"} `}
             >
               <ChevronDown
                 className={`hidden text-zinc-300 size-5 cursor-pointer transition-all duration-300 ${
@@ -254,7 +310,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                       : showAbove
                       ? "bottom-full left-0 origin-bottom-left mb-2"
                       : "top-full left-0 origin-top-left mt-2"
-                  } bg-zinc-900 p-2 rounded-lg flex flex-col w-36 transition-transform duration-200`}
+                  } bg-zinc-900 p-2 rounded-lg flex flex-col w-36 transition-transform duration-200 animate-wave-in`}
                 >
                   {actionItems.map((item, i) => (
                     <button
@@ -262,8 +318,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                       onClick={item.onClick}
                       disabled={item.disabled}
                       className={`flex items-center gap-2 px-2 py-1 font-[500] text-md ${
-                        item.disabled ? 'text-zinc-500 cursor-not-allowed' : 'text-zinc-300 hover:bg-zinc-800 cursor-pointer'
-                      } rounded-md`}
+      item.hidden ? "hidden" :
+      item.disabled ? "hidden" : "text-zinc-300 hover:bg-zinc-800 cursor-pointer"
+    } rounded-md`}
                     >
                       {item.icon} {item.label}
                     </button>
@@ -318,7 +375,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                       payload: {
                         messageId: msg._id,
                         to: selectedUser?._id,
-                        type: isDeleted ? "for_me" : deleteType === "everyone" ? "for_everyone" : "me",
+                        type: isDeleted ? "me" : deleteType === "everyone" ? "for_everyone" : "me",
                       },
                     };
                     socketRef.current?.send(JSON.stringify(wsPayload));
@@ -370,7 +427,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           <IconMoodSmile
             className={`text-zinc-400 transition-all duration-300 ${
               showReactBox === msg._id ? "block" : "md:hidden group-hover:block"
-            }`}
+            } pro-wave-in`}
             onClick={() => setShowReactBox((prev) => (prev === msg._id ? null : msg._id))}
           />
           {showReactBox === msg._id && (

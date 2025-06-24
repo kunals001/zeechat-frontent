@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import axios from "axios";
 import { Camera } from "lucide-react";
+import Image from "next/image";
 
 interface ProfilePicUploaderProps {
   profilePic: string;
@@ -48,7 +49,9 @@ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
       onClick={handleClick}
     >
       {previewUrl ? (
-            <img
+            <Image
+            width={100}
+            height={100}
             src={previewUrl}
             alt="Preview"
             className="rounded-full w-full h-full object-cover"

@@ -6,14 +6,56 @@ import {
   receiveMessage,
   addReactionToMessage,
   messageDeleted,
-  clearChatForMe
+  clearChatForMe,
+  messageSeen
 } from "@/redux/slice/conversationSlice";
 import Cookies from "js-cookie";
 
-type WebSocketPayload = {
-  type: string;
-  payload: any;
-};
+type WebSocketPayload =
+  | {
+      type: 'send_message';
+      payload: {
+        message: string;
+        to: string;            // receiver userId
+        conversationId: string;
+        tempId: string;        // temporary message ID for optimistic UI
+      };
+    }
+  | {
+      type: 'receive_message';
+      payload: {
+        messageId: string;
+        from: string;
+        conversationId: string;
+        message: string;
+        createdAt: string;
+      };
+    }
+  | {
+      type: 'typing';
+      payload: {
+        isTyping: boolean;
+        to: string;
+        conversationId: string;
+      };
+    }
+  | {
+      type: 'seen';
+      payload: {
+        messageId: string;
+        conversationId: string;
+        seenAt: string;
+      };
+    }
+  | {
+      type: 'online_status';
+      payload: {
+        userId: string;
+        isOnline: boolean;
+        lastSeen: string;
+      };
+    };
+
 
 export const socketRef = { current: null as WebSocket | null };
 
@@ -39,6 +81,7 @@ export const useWebSocket = () => {
       console.log("✅ WebSocket connected");
     };
 
+
     ws.onmessage = (e) => {
       try {
         const data = JSON.parse(e.data);
@@ -63,6 +106,14 @@ export const useWebSocket = () => {
         if (data.type === "chat_cleared") {
           dispatch(clearChatForMe({ userId: data.payload.userId }));
         }
+
+        if (data.type === "message_seen") {
+          dispatch(messageSeen({
+            messageId: data.payload.messageId,
+            seenBy: data.payload.seenBy, // ✅ sahi key
+          }));
+        }
+
     
       } catch (err) {
         console.error("❌ WS parse error", err);
